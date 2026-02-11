@@ -25,7 +25,17 @@ const Login = () => {
     }
   });
 
-  const onSubmit = async (data) => {
+  
+      const onSubmit = (data) => {  // Change name & use data param
+    // Your existing role-based logic:
+    if (data.email.includes("super")) {
+      navigate("/super-admin/dashboard");
+    } else if (data.email.includes("admin")) {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/student/dashboard");
+    }
+  };
     // setError('');
     
     // try {
@@ -44,7 +54,7 @@ const Login = () => {
     // }
    
     
-  };
+
 
   return (
     <div className="bg-gray-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
