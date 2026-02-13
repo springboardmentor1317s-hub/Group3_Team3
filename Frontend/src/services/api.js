@@ -1,18 +1,17 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL:
-    import.meta.env.MODE === "development"
-      ? "http://localhost:5000/api" // 👈 your local backend port
-      : "https://campus-eventhub-team4.onrender.com/api", // 👈 deployed backend
+  baseURL: 
+    "http://localhost:5000/api"  
+   , 
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Automatically attach token if available
+
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token"); // or sessionStorage
+  const token = localStorage.getItem("token"); 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
