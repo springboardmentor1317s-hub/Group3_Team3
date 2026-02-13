@@ -7,12 +7,12 @@ import { FaEnvelope, FaUser, FaLock, FaEye, FaEyeSlash, FaGraduationCap } from "
 
 function Register() {
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     email: "",
-    college: "",
-    accountType: "Student",
     password: "",
-    confirmPassword: "",
+    college: "",
+    role: "student",
+    confirmPassword: ""
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -33,18 +33,26 @@ function Register() {
     }
 
     try {
-      const res = await api.post("/auth/signup", formData);
+      const res = await api.post("/auth/register", formData);
 
-      setToken(res.data.token);
-      localStorage.setItem("role", res.data.user.accountType);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      // console.log(res)
+
+      setToken(res.data.data.token);
+      localStorage.setItem("role", res.data.data.user.role);
+      localStorage.setItem("user", JSON.stringify(res.data.data.user));
 
       toast.success("Account created successfully!");
-      navigate(
-        res.data.user.accountType === "College Admin"
-          ? "/admin-dashboard"
-          : "/user-dashboard"
-      );
+     
+        if(res.data.data.user.role === "college_admin") {
+           navigate( "/admin-dashboard")
+        }
+        if(res.data.data.user.role === "super_admin") {
+           navigate( "/superAdmin-dashboard")
+        }
+        if(res.data.data.user.role === "student") {
+           navigate( "/student-dashboard")
+        }
+      
     } catch (err) {
       toast.error(err.response?.data?.message || "Registration failed");
     }
@@ -223,10 +231,10 @@ function Register() {
                   <FaUser style={styles.icon} />
                   <input
                     type="text"
-                    name="fullName"
+                    name="name"
                     style={styles.input}
                     placeholder="Enter your full name"
-                    value={formData.fullName}
+                    value={formData.name}
                     onChange={handleChange}
                     onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
@@ -277,16 +285,17 @@ function Register() {
               <div style={styles.formGroup}>
                 <label style={styles.label}>Account Type</label>
                 <select
-                  name="accountType"
+                  name="role"
                   style={styles.select}
-                  value={formData.accountType}
+                  value={formData.role}
                   onChange={handleChange}
                   onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
                   onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                   required
                 >
-                  <option value="Student">Student</option>
-                  <option value="College Admin">College Admin</option>
+                  <option value="student">Student</option>
+                  <option value="college_admin">College Admin</option>
+                  <option value="super_admin">Super Admin</option>
                 </select>
               </div>
 

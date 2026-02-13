@@ -28,8 +28,12 @@ export const register = async (req, res) => {
       role: role || 'student' // Default to student if not specified
     });
 
+    // console.log(user.name)
+
     // Generate token
     const token = generateToken(user._id);
+
+    console.log(token)
 
     // Set token in cookie
     setTokenCookie(res, token);
