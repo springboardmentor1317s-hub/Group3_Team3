@@ -6,11 +6,11 @@ import "react-toastify/dist/ReactToastify.css";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import StudentDashboard from "./pages/StudentDashboard";
 // import Events from "./pages/Events";
 // import EventDetails from "./pages/EventDetails";
 // import CreateEvent from "./pages/CreateEvent";
 // import EditEvent from "./pages/EditEvent";
-// import UserDashboard from "./pages/UserDashboard";
 // import AdminDashboard from "./pages/AdminDashboard";
 // import ManageRegistrations from "./pages/ManageRegistrations";
 // import SuperAdminDashboard from "./pages/SuperAdminDashboard"; // ✅ Added import
@@ -50,14 +50,14 @@ function App() {
         />
 
         {/* ---------- Student Routes ---------- */}
-        {/* <Route
-          path="/user-dashboard"
+        <Route
+          path="/student-dashboard"
           element={
-            <ProtectedRoute role="Student">
-              <UserDashboard />
+            <ProtectedRoute role="student">
+              <StudentDashboard />
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         {/* ---------- College Admin Routes ---------- */}
         {/* <Route
