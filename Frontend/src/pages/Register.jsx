@@ -3,7 +3,14 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import { toast } from "react-toastify";
 import { setToken } from "../services/auth";
-import { FaEnvelope, FaUser, FaLock, FaEye, FaEyeSlash, FaGraduationCap } from "react-icons/fa";
+import {
+  FaEnvelope,
+  FaUser,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+  FaGraduationCap,
+} from "react-icons/fa";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -14,10 +21,8 @@ function Register() {
     password: "",
     confirmPassword: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -33,20 +38,35 @@ function Register() {
     }
 
     try {
-      const res = await api.post("/auth/signup", formData);
+      const res = await api.post("/auth/signup", {
+        fullName: formData.fullName,
+        email: formData.email,
+        college: formData.college,
+        accountType: formData.accountType,
+        password: formData.password,
+      });
 
-      setToken(res.data.token);
-      localStorage.setItem("role", res.data.user.accountType);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const user = res.data.user;
+      const token = res.data.token;
+
+      setToken(token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.accountType);
+      localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("Account created successfully!");
-      navigate(
-        res.data.user.accountType === "College Admin"
-          ? "/admin-dashboard"
-          : "/user-dashboard"
-      );
+
+      if (user.accountType === "College Admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/user-dashboard");
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Registration failed");
+      const message =
+        err.response?.data?.errors?.[0]?.message ||
+        err.response?.data?.message ||
+        "Registration failed. Please try again.";
+      toast.error(message);
     }
   };
 
@@ -59,10 +79,7 @@ function Register() {
       justifyContent: "center",
       padding: "20px",
     },
-    wrapper: {
-      width: "100%",
-      maxWidth: "480px",
-    },
+    wrapper: { width: "100%", maxWidth: "480px" },
     card: {
       background: "white",
       borderRadius: "20px",
@@ -87,23 +104,10 @@ function Register() {
       margin: "0 auto 20px",
       fontSize: "32px",
     },
-    headerTitle: {
-      fontSize: "28px",
-      fontWeight: "700",
-      marginBottom: "8px",
-      margin: 0,
-    },
-    headerSubtitle: {
-      fontSize: "15px",
-      opacity: "0.9",
-      margin: 0,
-    },
-    formContainer: {
-      padding: "32px",
-    },
-    formGroup: {
-      marginBottom: "20px",
-    },
+    headerTitle: { fontSize: "28px", fontWeight: "700", margin: 0 },
+    headerSubtitle: { fontSize: "15px", opacity: "0.9", margin: 0 },
+    formContainer: { padding: "32px" },
+    formGroup: { marginBottom: "20px" },
     label: {
       display: "block",
       fontSize: "14px",
@@ -111,9 +115,7 @@ function Register() {
       color: "#374151",
       marginBottom: "8px",
     },
-    inputWrapper: {
-      position: "relative",
-    },
+    inputWrapper: { position: "relative" },
     icon: {
       position: "absolute",
       left: "14px",
@@ -187,11 +189,7 @@ function Register() {
       fontSize: "14px",
       color: "#6b7280",
     },
-    link: {
-      color: "#667eea",
-      fontWeight: "600",
-      textDecoration: "none",
-    },
+    link: { color: "#667eea", fontWeight: "600", textDecoration: "none" },
     footer: {
       textAlign: "center",
       fontSize: "13px",
@@ -204,19 +202,17 @@ function Register() {
     <div style={styles.container}>
       <div style={styles.wrapper}>
         <div style={styles.card}>
-          {/* Header */}
           <div style={styles.header}>
             <div style={styles.iconCircle}>
               <FaGraduationCap />
             </div>
             <h2 style={styles.headerTitle}>Join Campus Hub</h2>
-            <p style={styles.headerSubtitle}>Connect with your campus community</p>
+            <p style={styles.headerSubtitle}>
+              Connect with your campus community
+            </p>
           </div>
-
-          {/* Form */}
           <div style={styles.formContainer}>
             <form onSubmit={handleRegister}>
-              {/* Full Name */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Full Name</label>
                 <div style={styles.inputWrapper}>
@@ -228,14 +224,15 @@ function Register() {
                     placeholder="Enter your full name"
                     value={formData.fullName}
                     onChange={handleChange}
-                    onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
+                    onFocus={(e) =>
+                      Object.assign(e.target.style, styles.inputFocus)
+                    }
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                     required
                   />
                 </div>
               </div>
 
-              {/* Email */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Email Address</label>
                 <div style={styles.inputWrapper}>
@@ -247,14 +244,15 @@ function Register() {
                     placeholder="you@example.com"
                     value={formData.email}
                     onChange={handleChange}
-                    onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
+                    onFocus={(e) =>
+                      Object.assign(e.target.style, styles.inputFocus)
+                    }
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                     required
                   />
                 </div>
               </div>
 
-              {/* College */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>College Name</label>
                 <div style={styles.inputWrapper}>
@@ -266,14 +264,15 @@ function Register() {
                     placeholder="Enter your college"
                     value={formData.college}
                     onChange={handleChange}
-                    onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
+                    onFocus={(e) =>
+                      Object.assign(e.target.style, styles.inputFocus)
+                    }
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                     required
                   />
                 </div>
               </div>
 
-              {/* Account Type */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Account Type</label>
                 <select
@@ -281,7 +280,9 @@ function Register() {
                   style={styles.select}
                   value={formData.accountType}
                   onChange={handleChange}
-                  onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
+                  onFocus={(e) =>
+                    Object.assign(e.target.style, styles.inputFocus)
+                  }
                   onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                   required
                 >
@@ -290,7 +291,6 @@ function Register() {
                 </select>
               </div>
 
-              {/* Password */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Password</label>
                 <div style={styles.inputWrapper}>
@@ -299,10 +299,12 @@ function Register() {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     style={styles.passwordInput}
-                    placeholder="Create a password"
+                    placeholder="Create a password (min 6 chars)"
                     value={formData.password}
                     onChange={handleChange}
-                    onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
+                    onFocus={(e) =>
+                      Object.assign(e.target.style, styles.inputFocus)
+                    }
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                     required
                   />
@@ -315,7 +317,6 @@ function Register() {
                 </div>
               </div>
 
-              {/* Confirm Password */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Confirm Password</label>
                 <div style={styles.inputWrapper}>
@@ -327,7 +328,9 @@ function Register() {
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
+                    onFocus={(e) =>
+                      Object.assign(e.target.style, styles.inputFocus)
+                    }
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                     required
                   />
@@ -340,24 +343,24 @@ function Register() {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 style={styles.button}
                 onMouseEnter={(e) => {
                   e.target.style.transform = "translateY(-2px)";
-                  e.target.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.5)";
+                  e.target.style.boxShadow =
+                    "0 6px 20px rgba(102, 126, 234, 0.5)";
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.transform = "translateY(0)";
-                  e.target.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.4)";
+                  e.target.style.boxShadow =
+                    "0 4px 15px rgba(102, 126, 234, 0.4)";
                 }}
               >
                 Create Account
               </button>
             </form>
 
-            {/* Sign In Link */}
             <p style={styles.signInText}>
               Already have an account?{" "}
               <Link to="/login" style={styles.link}>
@@ -366,8 +369,6 @@ function Register() {
             </p>
           </div>
         </div>
-
-        {/* Footer */}
         <p style={styles.footer}>
           By registering, you agree to our Terms & Privacy Policy
         </p>

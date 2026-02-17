@@ -1,11 +1,21 @@
 import User from '../models/User.model.js';
 import { generateToken, setTokenCookie, clearTokenCookie } from '../utils/jwt.utils.js';
 
+// Maps DB role ('college_admin') → display string ('College Admin') for frontend
+const roleToAccountType = (role) => {
+  const map = {
+    student: 'Student',
+    college_admin: 'College Admin',
+    super_admin: 'Super Admin',
+  };
+  return map[role] || 'Student';
+};
+
 export const register = async (req, res) => {
   try {
     const { name, email, password, college, role } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -15,7 +25,7 @@ export const register = async (req, res) => {
 
     const user = await User.create({
       name,
-      email,
+      email: email.toLowerCase(),
       password,
       college,
       role: role || 'student'
@@ -24,19 +34,21 @@ export const register = async (req, res) => {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      college: user.college,
+      role: user.role,
+      accountType: roleToAccountType(user.role)  // frontend reads this for navigation
+    };
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          college: user.college,
-          role: user.role
-        },
-        token
-      }
+      user: userData,   // frontend reads res.data.user
+      token,            // frontend reads res.data.token
+      data: { user: userData, token }  // kept for any other code using res.data.data
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -52,22 +64,15 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     const isPasswordMatch = await user.comparePassword(password);
-
     if (!isPasswordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     user.lastLogin = new Date();
@@ -76,20 +81,22 @@ export const login = async (req, res) => {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      college: user.college,
+      role: user.role,
+      accountType: roleToAccountType(user.role),  // frontend reads this for navigation
+      lastLogin: user.lastLogin
+    };
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          college: user.college,
-          role: user.role,
-          lastLogin: user.lastLogin
-        },
-        token
-      }
+      user: userData,   // frontend reads res.data.user
+      token,            // frontend reads res.data.token
+      data: { user: userData, token }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -104,29 +111,29 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     clearTokenCookie(res);
-    res.status(200).json({
-      success: true,
-      message: 'Logout successful'
-    });
+    res.status(200).json({ success: true, message: 'Logout successful' });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error logging out'
-    });
+    res.status(500).json({ success: false, message: 'Error logging out' });
   }
 };
 
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      college: user.college,
+      role: user.role,
+      accountType: roleToAccountType(user.role)
+    };
     res.status(200).json({
       success: true,
-      data: { user }
+      user: userData,
+      data: { user: userData }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching user data'
-    });
+    res.status(500).json({ success: false, message: 'Error fetching user data' });
   }
 };
