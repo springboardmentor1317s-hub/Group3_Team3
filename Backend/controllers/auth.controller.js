@@ -1,6 +1,7 @@
 import User from '../models/User.model.js';
 import { generateToken, setTokenCookie, clearTokenCookie } from '../utils/jwt.utils.js';
 
+<<<<<<< HEAD
 // Maps DB role ('college_admin') → display string ('College Admin') for frontend
 const roleToAccountType = (role) => {
   const map = {
@@ -11,11 +12,17 @@ const roleToAccountType = (role) => {
   return map[role] || 'Student';
 };
 
+=======
+>>>>>>> 5c05d4d (changes in backend)
 export const register = async (req, res) => {
   try {
     const { name, email, password, college, role } = req.body;
 
+<<<<<<< HEAD
     const existingUser = await User.findOne({ email: email.toLowerCase() });
+=======
+    const existingUser = await User.findOne({ email });
+>>>>>>> 5c05d4d (changes in backend)
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -64,7 +71,11 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+<<<<<<< HEAD
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+=======
+    const user = await User.findOne({ email }).select('+password');
+>>>>>>> 5c05d4d (changes in backend)
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
@@ -111,15 +122,28 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     clearTokenCookie(res);
+<<<<<<< HEAD
     res.status(200).json({ success: true, message: 'Logout successful' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error logging out' });
+=======
+    res.status(200).json({
+      success: true,
+      message: 'Logout successful'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error logging out'
+    });
+>>>>>>> 5c05d4d (changes in backend)
   }
 };
 
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
+<<<<<<< HEAD
     const userData = {
       id: user._id,
       name: user.name,
@@ -135,5 +159,16 @@ export const getMe = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching user data' });
+=======
+    res.status(200).json({
+      success: true,
+      data: { user }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user data'
+    });
+>>>>>>> 5c05d4d (changes in backend)
   }
 };

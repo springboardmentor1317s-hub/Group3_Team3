@@ -46,8 +46,12 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
+<<<<<<< HEAD
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🤖 Chatbot: Enabled at /api/chatbot`);
+=======
+  console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+>>>>>>> 5c05d4d (changes in backend)
 });
 
 export default app;
