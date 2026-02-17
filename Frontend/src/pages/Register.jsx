@@ -14,11 +14,11 @@ import {
 
 function Register() {
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     email: "",
-    college: "",
-    accountType: "Student",
     password: "",
+    college: "",
+    role: "student",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -38,29 +38,18 @@ function Register() {
     }
 
     try {
-      const res = await api.post("/auth/signup", {
-        fullName: formData.fullName,
-        email: formData.email,
-        college: formData.college,
-        accountType: formData.accountType,
-        password: formData.password,
-      });
+      const res = await api.post("/auth/signup", formData);
 
-      const user = res.data.user;
-      const token = res.data.token;
-
-      setToken(token);
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.accountType);
-      localStorage.setItem("user", JSON.stringify(user));
+      setToken(res.data.token);
+      localStorage.setItem("role", res.data.user.accountType);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
       toast.success("Account created successfully!");
-
-      if (user.accountType === "College Admin") {
-        navigate("/admin-dashboard");
-      } else {
-        navigate("/user-dashboard");
-      }
+      navigate(
+        res.data.user.accountType === "College Admin"
+          ? "/admin-dashboard"
+          : "/user-dashboard",
+      );
     } catch (err) {
       const message =
         err.response?.data?.errors?.[0]?.message ||
@@ -219,10 +208,10 @@ function Register() {
                   <FaUser style={styles.icon} />
                   <input
                     type="text"
-                    name="fullName"
+                    name="name"
                     style={styles.input}
                     placeholder="Enter your full name"
-                    value={formData.fullName}
+                    value={formData.name}
                     onChange={handleChange}
                     onFocus={(e) =>
                       Object.assign(e.target.style, styles.inputFocus)
@@ -276,9 +265,9 @@ function Register() {
               <div style={styles.formGroup}>
                 <label style={styles.label}>Account Type</label>
                 <select
-                  name="accountType"
+                  name="role"
                   style={styles.select}
-                  value={formData.accountType}
+                  value={formData.role}
                   onChange={handleChange}
                   onFocus={(e) =>
                     Object.assign(e.target.style, styles.inputFocus)
@@ -286,8 +275,9 @@ function Register() {
                   onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                   required
                 >
-                  <option value="Student">Student</option>
-                  <option value="College Admin">College Admin</option>
+                  <option value="student">Student</option>
+                  <option value="college_admin">College Admin</option>
+                  <option value="super_admin">Super Admin</option>
                 </select>
               </div>
 

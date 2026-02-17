@@ -31,7 +31,18 @@ export const register = async (req, res) => {
       role: role || 'student'
     });
 
+<<<<<<< HEAD
     const token = generateToken(user._id);
+=======
+    // console.log(user.name)
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    console.log(token)
+
+    // Set token in cookie
+>>>>>>> origin/Dhivya_R
     setTokenCookie(res, token);
 
     const userData = {

@@ -17,7 +17,7 @@ function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    accountType: "Student",
+    role: "student",
   });
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -29,27 +29,20 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/auth/signin", {
-        email: formData.email,
-        password: formData.password,
-      });
+      const res = await api.post("/auth/signin", formData);
 
-      const user = res.data.user;
-      const token = res.data.token;
-
-      setToken(token);
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", user.accountType);
-      localStorage.setItem("user", JSON.stringify(user));
+      setToken(res.data.token);
+      localStorage.setItem("role", res.data.user.accountType);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
       toast.success("Login successful!");
 
-      if (user.accountType === "Super Admin") {
+      if (res.data.user.accountType === "Super Admin") {
         navigate("/superadmin-dashboard");
-      } else if (user.accountType === "College Admin") {
+      } else if (res.data.user.accountType === "College Admin") {
         navigate("/admin-dashboard");
       } else {
-        navigate("/user-dashboard");
+        navigate("/student-dashboard");
       }
     } catch (err) {
       const message =
@@ -293,15 +286,15 @@ function Login() {
                 >
                   <div style={styles.selectIcon}>{getAccountIcon()}</div>
                   <select
-                    name="accountType"
+                    name="role"
                     style={styles.select}
-                    value={formData.accountType}
+                    value={formData.role}
                     onChange={handleChange}
                     required
                   >
                     <option value="Student">Student</option>
-                    <option value="College Admin">College Admin</option>
-                    <option value="Super Admin">Super Admin</option>
+                    <option value="college_admin">College Admin</option>
+                    <option value="super_admin">Super Admin</option>
                   </select>
                 </div>
               </div>
