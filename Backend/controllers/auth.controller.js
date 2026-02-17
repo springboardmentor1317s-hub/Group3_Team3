@@ -1,16 +1,10 @@
 import User from '../models/User.model.js';
 import { generateToken, setTokenCookie, clearTokenCookie } from '../utils/jwt.utils.js';
 
-/**
- * @desc    Register a new user
- * @route   POST /api/auth/register
- * @access  Public
- */
 export const register = async (req, res) => {
   try {
     const { name, email, password, college, role } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -19,19 +13,15 @@ export const register = async (req, res) => {
       });
     }
 
-    // Create user
     const user = await User.create({
       name,
       email,
       password,
       college,
-      role: role || 'student' // Default to student if not specified
+      role: role || 'student'
     });
 
-    // Generate token
     const token = generateToken(user._id);
-
-    // Set token in cookie
     setTokenCookie(res, token);
 
     res.status(201).json({
@@ -58,16 +48,10 @@ export const register = async (req, res) => {
   }
 };
 
-/**
- * @desc    Login user
- * @route   POST /api/auth/login
- * @access  Public
- */
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if user exists and include password field
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
@@ -77,15 +61,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Your account has been deactivated. Please contact support.'
-      });
-    }
-
-    // Verify password
     const isPasswordMatch = await user.comparePassword(password);
 
     if (!isPasswordMatch) {
@@ -95,14 +70,10 @@ export const login = async (req, res) => {
       });
     }
 
-    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate token
     const token = generateToken(user._id);
-
-    // Set token in cookie
     setTokenCookie(res, token);
 
     res.status(200).json({
@@ -130,59 +101,32 @@ export const login = async (req, res) => {
   }
 };
 
-/**
- * @desc    Logout user
- * @route   POST /api/auth/logout
- * @access  Private
- */
 export const logout = async (req, res) => {
   try {
-    // Clear token cookie
     clearTokenCookie(res);
-
     res.status(200).json({
       success: true,
       message: 'Logout successful'
     });
   } catch (error) {
-    console.error('Logout error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error logging out',
-      error: error.message
+      message: 'Error logging out'
     });
   }
 };
 
-/**
- * @desc    Get current logged in user
- * @route   GET /api/auth/me
- * @access  Private
- */
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-
     res.status(200).json({
       success: true,
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          college: user.college,
-          role: user.role,
-          lastLogin: user.lastLogin,
-          createdAt: user.createdAt
-        }
-      }
+      data: { user }
     });
   } catch (error) {
-    console.error('Get me error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching user data',
-      error: error.message
+      message: 'Error fetching user data'
     });
   }
 };

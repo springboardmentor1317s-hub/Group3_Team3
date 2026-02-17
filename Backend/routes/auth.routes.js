@@ -5,11 +5,17 @@ import { registerValidation, loginValidation } from '../middleware/validation.mi
 
 const router = express.Router();
 
-// Register route
-router.post('/register', registerValidation, register);
+// ==================== CRITICAL: THESE ROUTES MUST EXIST ====================
 
-// Login route
+// Register routes - Support BOTH /register and /signup
+router.post('/register', registerValidation, register);
+router.post('/signup', registerValidation, register);  // ← FRONTEND NEEDS THIS!
+
+// Login routes - Support BOTH /login and /signin  
 router.post('/login', loginValidation, login);
+router.post('/signin', loginValidation, login);  // ← FRONTEND NEEDS THIS!
+
+// ===========================================================================
 
 // Logout route
 router.post('/logout', protect, logout);
@@ -17,4 +23,4 @@ router.post('/logout', protect, logout);
 // Get current user
 router.get('/me', protect, getMe);
 
-export default router;  // ← IMPORTANT: Must be 'export default'
+export default router;

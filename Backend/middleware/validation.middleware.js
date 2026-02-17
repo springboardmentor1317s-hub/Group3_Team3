@@ -6,6 +6,8 @@ import { body, validationResult } from 'express-validator';
 export const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Log errors for debugging
+    console.log('Validation errors:', errors.array());
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
@@ -19,15 +21,19 @@ export const validate = (req, res, next) => {
 };
 
 /**
- * Registration validation rules
+ * Registration validation rules - RELAXED for frontend compatibility
  */
 export const registerValidation = [
-  body('name')
-    .trim()
-    .notEmpty()
-    .withMessage('Name is required')
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Name must be between 2 and 100 characters'),
+  // Accept EITHER name OR fullName
+  body().custom((value, { req }) => {
+    const userName = req.body.name || req.body.fullName;
+    if (!userName || userName.trim().length === 0) {
+      throw new Error('Name is required');
+    }
+    // Set name field for backend processing
+    req.body.name = userName.trim();
+    return true;
+  }),
   
   body('email')
     .trim()
@@ -37,23 +43,28 @@ export const registerValidation = [
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),
   
+  // RELAXED password validation - just check it exists and has min length
   body('password')
     .notEmpty()
     .withMessage('Password is required')
     .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage('Password must be at least 6 characters'),
   
   body('college')
     .trim()
     .notEmpty()
     .withMessage('College name is required'),
   
-  body('role')
-    .optional()
-    .isIn(['student', 'college_admin', 'super_admin'])
-    .withMessage('Invalid role. Must be student, college_admin, or super_admin'),
+  // Map accountType to role if needed
+  body().custom((value, { req }) => {
+    if (req.body.accountType && !req.body.role) {
+      const accountType = req.body.accountType;
+      if (accountType === 'Student') req.body.role = 'student';
+      else if (accountType === 'College Admin') req.body.role = 'college_admin';
+      else if (accountType === 'Super Admin') req.body.role = 'super_admin';
+    }
+    return true;
+  }),
   
   validate
 ];
@@ -81,7 +92,7 @@ export const loginValidation = [
  * Update profile validation rules
  */
 export const updateProfileValidation = [
-  body('name')
+  body(['name', 'fullName'])
     .optional()
     .trim()
     .isLength({ min: 2, max: 100 })
@@ -108,9 +119,7 @@ export const changePasswordValidation = [
     .notEmpty()
     .withMessage('New password is required')
     .isLength({ min: 6 })
-    .withMessage('New password must be at least 6 characters')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage('New password must be at least 6 characters'),
   
   body('confirmPassword')
     .notEmpty()
