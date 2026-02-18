@@ -29,20 +29,28 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/auth/signin", formData);
+      const res = await api.post("/auth/signin", {
+        email: formData.email,
+        password: formData.password,
+      });
 
-      setToken(res.data.token);
-      localStorage.setItem("role", res.data.user.accountType);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const user = res.data.user;
+      const token = res.data.token;
+
+      setToken(token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.accountType);
+      localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("Login successful!");
 
-      if (res.data.user.accountType === "Super Admin") {
-        navigate("/superadmin-dashboard");
-      } else if (res.data.user.accountType === "College Admin") {
-        navigate("/admin-dashboard");
+      // ✅ Routes match exactly what App.jsx defines
+      if (user.accountType === "Super Admin") {
+        navigate("/super-admin/dashboard");
+      } else if (user.accountType === "College Admin") {
+        navigate("/admin/dashboard");
       } else {
-        navigate("/student-dashboard");
+        navigate("/student/dashboard");
       }
     } catch (err) {
       const message =
@@ -54,10 +62,10 @@ function Login() {
   };
 
   const getAccountIcon = () => {
-    switch (formData.accountType) {
-      case "Super Admin":
+    switch (formData.role) {
+      case "super_admin":
         return <FaUserShield />;
-      case "College Admin":
+      case "college_admin":
         return <FaUniversity />;
       default:
         return <FaUserGraduate />;
@@ -272,18 +280,7 @@ function Login() {
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Account Type</label>
-                <div
-                  style={styles.selectWrapper}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#667eea";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 0 3px rgba(102, 126, 234, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "#e5e7eb";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
+                <div style={styles.selectWrapper}>
                   <div style={styles.selectIcon}>{getAccountIcon()}</div>
                   <select
                     name="role"
@@ -292,7 +289,7 @@ function Login() {
                     onChange={handleChange}
                     required
                   >
-                    <option value="Student">Student</option>
+                    <option value="student">Student</option>
                     <option value="college_admin">College Admin</option>
                     <option value="super_admin">Super Admin</option>
                   </select>
@@ -330,7 +327,6 @@ function Login() {
                 Sign In
               </button>
             </form>
-
             <p style={styles.signUpText}>
               Don't have an account?{" "}
               <Link to="/register" style={styles.link}>

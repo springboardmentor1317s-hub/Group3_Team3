@@ -1,7 +1,16 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { removeToken, getToken } from "../services/auth";
 import { toast } from "react-toastify";
-import { FaCalendarDays, FaCalendar, FaChartLine, FaRightFromBracket, FaRightToBracket, FaUserPlus, FaBars, FaXmark } from "react-icons/fa6";
+import {
+  FaCalendarDays,
+  FaCalendar,
+  FaChartLine,
+  FaRightFromBracket,
+  FaRightToBracket,
+  FaUserPlus,
+  FaBars,
+  FaXmark,
+} from "react-icons/fa6";
 import { useState } from "react";
 
 function Navbar() {
@@ -109,7 +118,8 @@ function Navbar() {
       alignItems: "center",
       gap: "12px",
       padding: "8px 16px",
-      background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
+      background:
+        "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
       borderRadius: "50px",
       border: "1px solid rgba(102, 126, 234, 0.2)",
     },
@@ -287,11 +297,14 @@ function Navbar() {
                     to="/events"
                     style={{
                       ...styles.navButton,
-                      ...(isActive("/events") ? styles.activeButton : styles.inactiveButton),
+                      ...(isActive("/events")
+                        ? styles.activeButton
+                        : styles.inactiveButton),
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive("/events")) {
-                        e.currentTarget.style.background = "rgba(102, 126, 234, 0.1)";
+                        e.currentTarget.style.background =
+                          "rgba(102, 126, 234, 0.1)";
                       }
                       e.currentTarget.style.transform = "translateY(-2px)";
                     }}
@@ -318,7 +331,8 @@ function Navbar() {
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive(getDashboardPath())) {
-                        e.currentTarget.style.background = "rgba(102, 126, 234, 0.1)";
+                        e.currentTarget.style.background =
+                          "rgba(102, 126, 234, 0.1)";
                       }
                       e.currentTarget.style.transform = "translateY(-2px)";
                     }}
@@ -354,11 +368,13 @@ function Navbar() {
                   onClick={handleLogout}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(245, 87, 108, 0.4)";
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 20px rgba(245, 87, 108, 0.4)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(245, 87, 108, 0.3)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 15px rgba(245, 87, 108, 0.3)";
                   }}
                 >
                   <FaRightFromBracket /> Logout
@@ -370,7 +386,8 @@ function Navbar() {
                   to="/login"
                   style={styles.loginButton}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(102, 126, 234, 0.1)";
+                    e.currentTarget.style.background =
+                      "rgba(102, 126, 234, 0.1)";
                     e.currentTarget.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
@@ -385,11 +402,13 @@ function Navbar() {
                   style={styles.registerButton}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.4)";
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 20px rgba(102, 126, 234, 0.4)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.3)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 15px rgba(102, 126, 234, 0.3)";
                   }}
                 >
                   <FaUserPlus /> Register
@@ -451,7 +470,9 @@ function Navbar() {
                 to="/events"
                 style={{
                   ...styles.navButton,
-                  ...(isActive("/events") ? styles.activeButton : styles.inactiveButton),
+                  ...(isActive("/events")
+                    ? styles.activeButton
+                    : styles.inactiveButton),
                   width: "100%",
                   justifyContent: "center",
                 }}
@@ -485,23 +506,37 @@ function Navbar() {
 
         {token ? (
           <button
-            style={{ ...styles.logoutButton, width: "100%", justifyContent: "center" }}
+            style={{
+              ...styles.logoutButton,
+              width: "100%",
+              justifyContent: "center",
+            }}
             onClick={handleLogout}
           >
             <FaRightFromBracket /> Logout
           </button>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
             <Link
               to="/login"
-              style={{ ...styles.loginButton, width: "100%", justifyContent: "center" }}
+              style={{
+                ...styles.loginButton,
+                width: "100%",
+                justifyContent: "center",
+              }}
               onClick={() => setIsMenuOpen(false)}
             >
               <FaRightToBracket /> Login
             </Link>
             <Link
               to="/register"
-              style={{ ...styles.registerButton, width: "100%", justifyContent: "center" }}
+              style={{
+                ...styles.registerButton,
+                width: "100%",
+                justifyContent: "center",
+              }}
               onClick={() => setIsMenuOpen(false)}
             >
               <FaUserPlus /> Register

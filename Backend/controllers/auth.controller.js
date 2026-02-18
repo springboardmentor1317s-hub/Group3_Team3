@@ -31,18 +31,7 @@ export const register = async (req, res) => {
       role: role || 'student'
     });
 
-<<<<<<< HEAD
     const token = generateToken(user._id);
-=======
-    // console.log(user.name)
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    console.log(token)
-
-    // Set token in cookie
->>>>>>> origin/Dhivya_R
     setTokenCookie(res, token);
 
     const userData = {
@@ -51,15 +40,15 @@ export const register = async (req, res) => {
       email: user.email,
       college: user.college,
       role: user.role,
-      accountType: roleToAccountType(user.role)  // frontend reads this for navigation
+      accountType: roleToAccountType(user.role)
     };
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
-      user: userData,   // frontend reads res.data.user
-      token,            // frontend reads res.data.token
-      data: { user: userData, token }  // kept for any other code using res.data.data
+      user: userData,
+      token,
+      data: { user: userData, token }
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -98,15 +87,15 @@ export const login = async (req, res) => {
       email: user.email,
       college: user.college,
       role: user.role,
-      accountType: roleToAccountType(user.role),  // frontend reads this for navigation
+      accountType: roleToAccountType(user.role),
       lastLogin: user.lastLogin
     };
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      user: userData,   // frontend reads res.data.user
-      token,            // frontend reads res.data.token
+      user: userData,
+      token,
       data: { user: userData, token }
     });
   } catch (error) {

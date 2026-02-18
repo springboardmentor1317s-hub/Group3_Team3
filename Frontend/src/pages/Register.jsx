@@ -38,18 +38,32 @@ function Register() {
     }
 
     try {
-      const res = await api.post("/auth/signup", formData);
+      const res = await api.post("/auth/signup", {
+        name: formData.name,
+        email: formData.email,
+        college: formData.college,
+        role: formData.role,
+        password: formData.password,
+      });
 
-      setToken(res.data.token);
-      localStorage.setItem("role", res.data.user.accountType);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const user = res.data.user;
+      const token = res.data.token;
+
+      setToken(token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.accountType);
+      localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("Account created successfully!");
-      navigate(
-        res.data.user.accountType === "College Admin"
-          ? "/admin-dashboard"
-          : "/user-dashboard",
-      );
+
+      // ✅ Routes match exactly what App.jsx defines
+      if (user.accountType === "College Admin") {
+        navigate("/admin/dashboard");
+      } else if (user.accountType === "Super Admin") {
+        navigate("/super-admin/dashboard");
+      } else {
+        navigate("/student/dashboard");
+      }
     } catch (err) {
       const message =
         err.response?.data?.errors?.[0]?.message ||
@@ -277,7 +291,6 @@ function Register() {
                 >
                   <option value="student">Student</option>
                   <option value="college_admin">College Admin</option>
-                  <option value="super_admin">Super Admin</option>
                 </select>
               </div>
 
@@ -350,7 +363,6 @@ function Register() {
                 Create Account
               </button>
             </form>
-
             <p style={styles.signInText}>
               Already have an account?{" "}
               <Link to="/login" style={styles.link}>
