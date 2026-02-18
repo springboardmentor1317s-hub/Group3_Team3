@@ -40,16 +40,22 @@ function Register() {
     try {
       const res = await api.post("/auth/signup", {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 8b1b8d9 (milestone-1)
         name: formData.name,
         email: formData.email,
         college: formData.college,
         role: formData.role,
+<<<<<<< HEAD
 =======
         fullName: formData.fullName,
         email: formData.email,
         college: formData.college,
         accountType: formData.accountType,
 >>>>>>> d2ee16d (admin updates for milestone 1)
+=======
+>>>>>>> 8b1b8d9 (milestone-1)
         password: formData.password,
       });
 
@@ -64,6 +70,9 @@ function Register() {
       toast.success("Account created successfully!");
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 8b1b8d9 (milestone-1)
       // ✅ Routes match exactly what App.jsx defines
       if (user.accountType === "College Admin") {
         navigate("/admin/dashboard");
@@ -71,12 +80,15 @@ function Register() {
         navigate("/super-admin/dashboard");
       } else {
         navigate("/student/dashboard");
+<<<<<<< HEAD
 =======
       if (user.accountType === "College Admin") {
         navigate("/admin-dashboard");
       } else {
         navigate("/user-dashboard");
 >>>>>>> d2ee16d (admin updates for milestone 1)
+=======
+>>>>>>> 8b1b8d9 (milestone-1)
       }
     } catch (err) {
       const message =
@@ -378,9 +390,12 @@ function Register() {
               </button>
             </form>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> d2ee16d (admin updates for milestone 1)
+=======
+>>>>>>> 8b1b8d9 (milestone-1)
             <p style={styles.signInText}>
               Already have an account?{" "}
               <Link to="/login" style={styles.link}>

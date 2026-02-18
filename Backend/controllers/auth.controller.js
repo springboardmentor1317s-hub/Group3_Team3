@@ -47,6 +47,7 @@ export const register = async (req, res) => {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
+<<<<<<< HEAD
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -60,6 +61,23 @@ export const register = async (req, res) => {
         },
         token
       }
+=======
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      college: user.college,
+      role: user.role,
+      accountType: roleToAccountType(user.role)
+    };
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      user: userData,
+      token,
+      data: { user: userData, token }
+>>>>>>> 8b1b8d9 (milestone-1)
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -92,6 +110,7 @@ export const login = async (req, res) => {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
+<<<<<<< HEAD
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -106,6 +125,24 @@ export const login = async (req, res) => {
         },
         token
       }
+=======
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      college: user.college,
+      role: user.role,
+      accountType: roleToAccountType(user.role),
+      lastLogin: user.lastLogin
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      user: userData,
+      token,
+      data: { user: userData, token }
+>>>>>>> 8b1b8d9 (milestone-1)
     });
   } catch (error) {
     console.error('Login error:', error);

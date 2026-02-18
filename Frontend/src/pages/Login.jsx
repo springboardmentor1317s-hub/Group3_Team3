@@ -45,17 +45,23 @@ function Login() {
       toast.success("Login successful!");
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 8b1b8d9 (milestone-1)
       // ✅ Routes match exactly what App.jsx defines
       if (user.accountType === "Super Admin") {
         navigate("/super-admin/dashboard");
       } else if (user.accountType === "College Admin") {
         navigate("/admin/dashboard");
+<<<<<<< HEAD
 =======
       if (user.accountType === "Super Admin") {
         navigate("/superadmin-dashboard");
       } else if (user.accountType === "College Admin") {
         navigate("/admin-dashboard");
 >>>>>>> d2ee16d (admin updates for milestone 1)
+=======
+>>>>>>> 8b1b8d9 (milestone-1)
       } else {
         navigate("/student/dashboard");
       }
@@ -288,6 +294,7 @@ function Login() {
               <div style={styles.formGroup}>
                 <label style={styles.label}>Account Type</label>
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <div style={styles.selectWrapper}>
 =======
                 <div
@@ -303,6 +310,9 @@ function Login() {
                   }}
                 >
 >>>>>>> d2ee16d (admin updates for milestone 1)
+=======
+                <div style={styles.selectWrapper}>
+>>>>>>> 8b1b8d9 (milestone-1)
                   <div style={styles.selectIcon}>{getAccountIcon()}</div>
                   <select
                     name="role"
@@ -350,9 +360,12 @@ function Login() {
               </button>
             </form>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> d2ee16d (admin updates for milestone 1)
+=======
+>>>>>>> 8b1b8d9 (milestone-1)
             <p style={styles.signUpText}>
               Don't have an account?{" "}
               <Link to="/register" style={styles.link}>
