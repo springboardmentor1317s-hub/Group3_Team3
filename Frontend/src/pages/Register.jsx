@@ -44,7 +44,7 @@ function Register() {
       toast.success("Account created successfully!");
      
         if(res.data.data.user.role === "college_admin") {
-           navigate( "/admin-dashboard")
+           navigate( "/collegeAdmin-dashboard")
         }
         if(res.data.data.user.role === "super_admin") {
            navigate( "/superAdmin-dashboard")

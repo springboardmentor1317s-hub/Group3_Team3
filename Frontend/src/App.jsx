@@ -7,13 +7,14 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
+import CollegeAdminDashboard from "./pages/CollegeAdminDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 // import Events from "./pages/Events";
 // import EventDetails from "./pages/EventDetails";
 // import CreateEvent from "./pages/CreateEvent";
 // import EditEvent from "./pages/EditEvent";
 // import AdminDashboard from "./pages/AdminDashboard";
 // import ManageRegistrations from "./pages/ManageRegistrations";
-// import SuperAdminDashboard from "./pages/SuperAdminDashboard"; // ✅ Added import
 
 // Components
 import Navbar from "./components/Navbar";
@@ -60,14 +61,14 @@ function App() {
         />
 
         {/* ---------- College Admin Routes ---------- */}
-        {/* <Route
-          path="/admin-dashboard"
+        <Route
+          path="/collegeAdmin-dashboard"
           element={
-            <ProtectedRoute role="College Admin">
-              <AdminDashboard />
+            <ProtectedRoute role="college_admin">
+              <CollegeAdminDashboard />
             </ProtectedRoute>
           }
-        /> */}
+        />
         {/* <Route
           path="/create-event"
           element={
@@ -93,15 +94,15 @@ function App() {
           }
         /> */}
 
-        {/* ---------- Super Admin Routes ----------
+        {/* ---------- Super Admin Routes ---------- */}
         <Route
-          path="/superadmin-dashboard"
+          path="/superAdmin-dashboard"
           element={
-            <ProtectedRoute role="Super Admin">
+            <ProtectedRoute role="super_admin">
               <SuperAdminDashboard />
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         {/* ---------- 404 Fallback ---------- */}
          {/* <Route

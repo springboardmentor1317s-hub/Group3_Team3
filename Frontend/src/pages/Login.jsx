@@ -41,7 +41,7 @@ function Login() {
       if (res.data.data.user.role === "super_admin") {
         navigate("/superAdmin-dashboard");
       } else if (res.data.data.user.role === "college_admin") {
-        navigate("/admin-dashboard");
+        navigate("/collegeAdmin-dashboard");
       } else {
         navigate("/student-dashboard");
       }
