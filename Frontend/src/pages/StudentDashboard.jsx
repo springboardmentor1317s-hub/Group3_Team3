@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Chatbot from '../components/Chatbot';
 
 function StudentDashboard() {
   // Static data for UI (backend will replace these)
@@ -122,6 +123,7 @@ function StudentDashboard() {
               </div>
             </div>
           </div>
+          <Chatbot />
 
           {/* Sidebar */}
           <div className="space-y-6">
@@ -173,8 +175,10 @@ function StudentDashboard() {
         </div>
       </div>
     </div>
+    
   );
 }
+
 
 function EventCard({ event }) {
   const getStatusStyle = (status) => {
