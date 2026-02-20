@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Chatbot from '../components/Chatbot'; 
 function CollegeAdminDashboard() {
 
 
@@ -77,6 +78,7 @@ function CollegeAdminDashboard() {
                   <span className={`text-${stat.color}-600 text-2xl`}>{stat.icon}</span>
                 </div>
                 <div>
+                  <Chatbot />
                   <p className="text-slate-600 text-sm">{stat.label}</p>
                   <p className="text-3xl font-black text-slate-900">{stat.value}</p>
                 </div>
@@ -132,6 +134,7 @@ function CollegeAdminDashboard() {
         </div>
       </div>
     </div>
+    
   );
 }
 
