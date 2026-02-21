@@ -29,32 +29,44 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/auth/login", formData);
-      // console.log(res)
-      console.log(res.data.data.token)
-      setToken(res.data.data.token);
-      localStorage.setItem("role", res.data.data.user.role);
-      localStorage.setItem("user", JSON.stringify(res.data.data.user));
+      const res = await api.post("/auth/signin", {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // Backend now returns user and token at top level
+      const user = res.data.user;
+      const token = res.data.token;
+
+      setToken(token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.role);
+      localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("Login successful!");
 
-      if (res.data.data.user.role === "super_admin") {
-        navigate("/superAdmin-dashboard");
-      } else if (res.data.data.user.role === "college_admin") {
-        navigate("/collegeAdmin-dashboard");
+      // Routes match exactly what App.jsx defines
+      if (user.accountType === "Super Admin") {
+        navigate("/super-admin/dashboard");
+      } else if (user.accountType === "College Admin") {
+        navigate("/admin/dashboard");
       } else {
-        navigate("/student-dashboard");
+        navigate("/student/dashboard");
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed");
+      const message =
+        err.response?.data?.errors?.[0]?.message ||
+        err.response?.data?.message ||
+        "Login failed. Please check your credentials.";
+      toast.error(message);
     }
   };
 
   const getAccountIcon = () => {
-    switch (formData.accountType) {
-      case "Super Admin":
+    switch (formData.role) {
+      case "super_admin":
         return <FaUserShield />;
-      case "College Admin":
+      case "college_admin":
         return <FaUniversity />;
       default:
         return <FaUserGraduate />;
@@ -70,10 +82,7 @@ function Login() {
       justifyContent: "center",
       padding: "20px",
     },
-    wrapper: {
-      width: "100%",
-      maxWidth: "450px",
-    },
+    wrapper: { width: "100%", maxWidth: "450px" },
     card: {
       background: "white",
       borderRadius: "20px",
@@ -98,23 +107,10 @@ function Login() {
       margin: "0 auto 20px",
       fontSize: "32px",
     },
-    headerTitle: {
-      fontSize: "28px",
-      fontWeight: "700",
-      marginBottom: "8px",
-      margin: 0,
-    },
-    headerSubtitle: {
-      fontSize: "15px",
-      opacity: "0.9",
-      margin: 0,
-    },
-    formContainer: {
-      padding: "32px",
-    },
-    formGroup: {
-      marginBottom: "20px",
-    },
+    headerTitle: { fontSize: "28px", fontWeight: "700", margin: 0 },
+    headerSubtitle: { fontSize: "15px", opacity: "0.9", margin: 0 },
+    formContainer: { padding: "32px" },
+    formGroup: { marginBottom: "20px" },
     label: {
       display: "block",
       fontSize: "14px",
@@ -122,9 +118,7 @@ function Login() {
       color: "#374151",
       marginBottom: "8px",
     },
-    inputWrapper: {
-      position: "relative",
-    },
+    inputWrapper: { position: "relative" },
     icon: {
       position: "absolute",
       left: "14px",
@@ -215,11 +209,7 @@ function Login() {
       fontSize: "14px",
       color: "#6b7280",
     },
-    link: {
-      color: "#667eea",
-      fontWeight: "600",
-      textDecoration: "none",
-    },
+    link: { color: "#667eea", fontWeight: "600", textDecoration: "none" },
     footer: {
       textAlign: "center",
       fontSize: "13px",
@@ -232,19 +222,17 @@ function Login() {
     <div style={styles.container}>
       <div style={styles.wrapper}>
         <div style={styles.card}>
-          {/* Header */}
           <div style={styles.header}>
             <div style={styles.iconCircle}>
               <FaUserShield />
             </div>
             <h2 style={styles.headerTitle}>Welcome Back</h2>
-            <p style={styles.headerSubtitle}>Sign in to your Campus Hub account</p>
+            <p style={styles.headerSubtitle}>
+              Sign in to your Campus Hub account
+            </p>
           </div>
-
-          {/* Form */}
           <div style={styles.formContainer}>
             <form onSubmit={handleLogin}>
-              {/* Email */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Email Address</label>
                 <div style={styles.inputWrapper}>
@@ -256,14 +244,15 @@ function Login() {
                     placeholder="you@example.com"
                     value={formData.email}
                     onChange={handleChange}
-                    onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
+                    onFocus={(e) =>
+                      Object.assign(e.target.style, styles.inputFocus)
+                    }
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                     required
                   />
                 </div>
               </div>
 
-              {/* Password */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Password</label>
                 <div style={styles.inputWrapper}>
@@ -275,7 +264,9 @@ function Login() {
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleChange}
-                    onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
+                    onFocus={(e) =>
+                      Object.assign(e.target.style, styles.inputFocus)
+                    }
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                     required
                   />
@@ -288,23 +279,21 @@ function Login() {
                 </div>
               </div>
 
-              {/* Account Type */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Account Type</label>
                 <div
                   style={styles.selectWrapper}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = "#667eea";
-                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 3px rgba(102, 126, 234, 0.1)";
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = "#e5e7eb";
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 >
-                  <div style={styles.selectIcon}>
-                    {getAccountIcon()}
-                  </div>
+                  <div style={styles.selectIcon}>{getAccountIcon()}</div>
                   <select
                     name="role"
                     style={styles.select}
@@ -312,14 +301,13 @@ function Login() {
                     onChange={handleChange}
                     required
                   >
-                    <option value="Student">Student</option>
+                    <option value="student">Student</option>
                     <option value="college_admin">College Admin</option>
                     <option value="super_admin">Super Admin</option>
                   </select>
                 </div>
               </div>
 
-              {/* Forgot Password Link */}
               <div style={{ textAlign: "right", marginBottom: "16px" }}>
                 <Link
                   to="/forgot-password"
@@ -334,24 +322,24 @@ function Login() {
                 </Link>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 style={styles.button}
                 onMouseEnter={(e) => {
                   e.target.style.transform = "translateY(-2px)";
-                  e.target.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.5)";
+                  e.target.style.boxShadow =
+                    "0 6px 20px rgba(102, 126, 234, 0.5)";
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.transform = "translateY(0)";
-                  e.target.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.4)";
+                  e.target.style.boxShadow =
+                    "0 4px 15px rgba(102, 126, 234, 0.4)";
                 }}
               >
                 Sign In
               </button>
             </form>
 
-            {/* Sign Up Link */}
             <p style={styles.signUpText}>
               Don't have an account?{" "}
               <Link to="/register" style={styles.link}>
@@ -360,11 +348,7 @@ function Login() {
             </p>
           </div>
         </div>
-
-        {/* Footer */}
-        <p style={styles.footer}>
-          Secure login powered by Campus Hub
-        </p>
+        <p style={styles.footer}>Secure login powered by Campus Hub</p>
       </div>
     </div>
   );
