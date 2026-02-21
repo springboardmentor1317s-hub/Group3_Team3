@@ -39,56 +39,31 @@ function Register() {
 
     try {
       const res = await api.post("/auth/signup", {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 8b1b8d9 (milestone-1)
         name: formData.name,
         email: formData.email,
         college: formData.college,
         role: formData.role,
-<<<<<<< HEAD
-=======
-        fullName: formData.fullName,
-        email: formData.email,
-        college: formData.college,
-        accountType: formData.accountType,
->>>>>>> d2ee16d (admin updates for milestone 1)
-=======
->>>>>>> 8b1b8d9 (milestone-1)
         password: formData.password,
       });
 
+      // Backend returns user and token at top level
       const user = res.data.user;
       const token = res.data.token;
 
       setToken(token);
       localStorage.setItem("token", token);
-      localStorage.setItem("role", user.accountType);
+      localStorage.setItem("role", user.role);
       localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("Account created successfully!");
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 8b1b8d9 (milestone-1)
-      // ✅ Routes match exactly what App.jsx defines
+      // Routes match exactly what App.jsx defines
       if (user.accountType === "College Admin") {
         navigate("/admin/dashboard");
       } else if (user.accountType === "Super Admin") {
         navigate("/super-admin/dashboard");
       } else {
         navigate("/student/dashboard");
-<<<<<<< HEAD
-=======
-      if (user.accountType === "College Admin") {
-        navigate("/admin-dashboard");
-      } else {
-        navigate("/user-dashboard");
->>>>>>> d2ee16d (admin updates for milestone 1)
-=======
->>>>>>> 8b1b8d9 (milestone-1)
       }
     } catch (err) {
       const message =
@@ -389,13 +364,7 @@ function Register() {
                 Create Account
               </button>
             </form>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 
->>>>>>> d2ee16d (admin updates for milestone 1)
-=======
->>>>>>> 8b1b8d9 (milestone-1)
             <p style={styles.signInText}>
               Already have an account?{" "}
               <Link to="/login" style={styles.link}>
@@ -405,7 +374,7 @@ function Register() {
           </div>
         </div>
         <p style={styles.footer}>
-          By registering, you agree to our Terms & Privacy Policy
+          By registering, you agree to our Terms &amp; Privacy Policy
         </p>
       </div>
     </div>

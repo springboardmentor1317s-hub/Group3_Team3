@@ -11,19 +11,6 @@ const roleToAccountType = (role) => {
   return map[role] || 'Student';
 };
 
-<<<<<<< HEAD
-// Maps DB role ('college_admin') → display string ('College Admin') for frontend
-const roleToAccountType = (role) => {
-  const map = {
-    student: 'Student',
-    college_admin: 'College Admin',
-    super_admin: 'Super Admin',
-  };
-  return map[role] || 'Student';
-};
-
-=======
->>>>>>> 5c05d4d (changes in backend)
 export const register = async (req, res) => {
   try {
     const { name, email, password, college, role } = req.body;
@@ -47,37 +34,20 @@ export const register = async (req, res) => {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
-<<<<<<< HEAD
-    res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          college: user.college,
-          role: user.role
-        },
-        token
-      }
-=======
-    const userData = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      college: user.college,
-      role: user.role,
-      accountType: roleToAccountType(user.role)
-    };
+    const accountType = roleToAccountType(user.role);
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
-      user: userData,
-      token,
-      data: { user: userData, token }
->>>>>>> 8b1b8d9 (milestone-1)
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        college: user.college,
+        role: user.role,
+        accountType
+      },
+      token
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -110,39 +80,21 @@ export const login = async (req, res) => {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
-<<<<<<< HEAD
-    res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          college: user.college,
-          role: user.role,
-          lastLogin: user.lastLogin
-        },
-        token
-      }
-=======
-    const userData = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      college: user.college,
-      role: user.role,
-      accountType: roleToAccountType(user.role),
-      lastLogin: user.lastLogin
-    };
+    const accountType = roleToAccountType(user.role);
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      user: userData,
-      token,
-      data: { user: userData, token }
->>>>>>> 8b1b8d9 (milestone-1)
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        college: user.college,
+        role: user.role,
+        accountType,
+        lastLogin: user.lastLogin
+      },
+      token
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -172,6 +124,22 @@ export const logout = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      college: user.college,
+      role: user.role,
+      accountType: roleToAccountType(user.role),
+      lastLogin: user.lastLogin,
+      createdAt: user.createdAt
+    };
+
     res.status(200).json({
       success: true,
       user: userData,

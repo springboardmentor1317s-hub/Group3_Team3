@@ -30,7 +30,6 @@ function Chatbot() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto scroll to bottom when new messages arrive
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -39,7 +38,6 @@ function Chatbot() {
     scrollToBottom();
   }, [messages]);
 
-  // Focus input when chatbot opens
   useEffect(() => {
     if (isOpen) {
       inputRef.current?.focus();
@@ -61,10 +59,11 @@ function Chatbot() {
     setIsTyping(true);
 
     try {
-      // Call backend chatbot API
-      const response = await api.post("/api/chatbot/message", {
+      // ✅ Fixed: api baseURL is already "http://localhost:5000/api"
+      // so path should be "/chatbot/message" not "/api/chatbot/message"
+      const response = await api.post("/chatbot/message", {
         message: messageText.trim(),
-        conversationHistory: messages.slice(-5), // Send last 5 messages for context
+        conversationHistory: messages.slice(-5),
       });
 
       const botMessage = {
@@ -78,14 +77,12 @@ function Chatbot() {
 
       setMessages((prev) => [...prev, botMessage]);
 
-      // Update suggestions if provided
       if (response.data.data.suggestions?.length > 0) {
         setSuggestions(response.data.data.suggestions);
       }
     } catch (error) {
       console.error("Chatbot error:", error);
 
-      // Fallback response if backend fails
       const errorMessage = {
         id: Date.now() + 1,
         text: "Sorry, I'm having trouble connecting right now. Please try again in a moment or contact support.",
@@ -118,7 +115,6 @@ function Chatbot() {
   };
 
   const styles = {
-    // Floating button
     floatingButton: {
       position: "fixed",
       bottom: "24px",
@@ -138,8 +134,6 @@ function Chatbot() {
       transition: "all 0.3s ease",
       zIndex: 1000,
     },
-
-    // Chatbot window
     chatWindow: {
       position: "fixed",
       bottom: "100px",
@@ -156,8 +150,6 @@ function Chatbot() {
       zIndex: 1000,
       animation: "slideUp 0.3s ease",
     },
-
-    // Header
     header: {
       background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       color: "white",
@@ -167,13 +159,11 @@ function Chatbot() {
       justifyContent: "space-between",
       borderRadius: "24px 24px 0 0",
     },
-
     headerLeft: {
       display: "flex",
       alignItems: "center",
       gap: "12px",
     },
-
     botAvatar: {
       width: "48px",
       height: "48px",
@@ -184,25 +174,21 @@ function Chatbot() {
       justifyContent: "center",
       fontSize: "24px",
     },
-
     headerText: {
       display: "flex",
       flexDirection: "column",
       gap: "2px",
     },
-
     headerTitle: {
       fontSize: "18px",
       fontWeight: "700",
       margin: 0,
     },
-
     headerStatus: {
       fontSize: "12px",
       opacity: 0.9,
       margin: 0,
     },
-
     closeButton: {
       background: "rgba(255, 255, 255, 0.2)",
       border: "none",
@@ -217,25 +203,20 @@ function Chatbot() {
       color: "white",
       transition: "all 0.2s",
     },
-
-    // Messages area
     messagesContainer: {
       flex: 1,
       overflowY: "auto",
       padding: "20px",
       background: "linear-gradient(to bottom, #f8f9fc, #ffffff)",
     },
-
     messageWrapper: {
       display: "flex",
       marginBottom: "16px",
       gap: "12px",
     },
-
     messageWrapperUser: {
       flexDirection: "row-reverse",
     },
-
     messageAvatar: {
       width: "32px",
       height: "32px",
@@ -246,82 +227,70 @@ function Chatbot() {
       fontSize: "14px",
       flexShrink: 0,
     },
-
     botMessageAvatar: {
       background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       color: "white",
     },
-
     userMessageAvatar: {
       background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
       color: "white",
     },
-
     messageContent: {
       maxWidth: "70%",
       display: "flex",
       flexDirection: "column",
       gap: "4px",
     },
-
     messageBubble: {
       padding: "12px 16px",
       borderRadius: "18px",
       fontSize: "14px",
       lineHeight: "1.5",
       wordWrap: "break-word",
+      whiteSpace: "pre-wrap",
     },
-
     botMessageBubble: {
       background: "#f0f2f5",
       color: "#1f2937",
       borderBottomLeftRadius: "4px",
     },
-
     userMessageBubble: {
       background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       color: "white",
       borderBottomRightRadius: "4px",
     },
-
     messageTime: {
       fontSize: "11px",
       color: "#9ca3af",
       paddingLeft: "8px",
     },
-
     messageTimeUser: {
       textAlign: "right",
       paddingLeft: 0,
       paddingRight: "8px",
     },
-
-    // Typing indicator
     typingIndicator: {
       display: "flex",
       alignItems: "center",
       gap: "12px",
       marginBottom: "16px",
     },
-
     typingBubble: {
       background: "#f0f2f5",
-      padding: "12px 16px",
       borderRadius: "18px",
       borderBottomLeftRadius: "4px",
+      padding: "12px 16px",
       display: "flex",
       gap: "4px",
+      alignItems: "center",
     },
-
     typingDot: {
       width: "8px",
       height: "8px",
       borderRadius: "50%",
       background: "#9ca3af",
-      animation: "bounce 1.4s infinite ease-in-out",
+      animation: "bounce 1.2s infinite",
     },
-
-    // Suggestions
     suggestionsContainer: {
       padding: "12px 20px",
       borderTop: "1px solid #e5e7eb",
@@ -330,7 +299,6 @@ function Chatbot() {
       flexWrap: "wrap",
       gap: "8px",
     },
-
     suggestionChip: {
       padding: "8px 16px",
       background: "#f0f2f5",
@@ -342,8 +310,6 @@ function Chatbot() {
       transition: "all 0.2s",
       fontWeight: "500",
     },
-
-    // Input area
     inputContainer: {
       padding: "16px 20px",
       borderTop: "1px solid #e5e7eb",
@@ -353,7 +319,6 @@ function Chatbot() {
       alignItems: "center",
       borderRadius: "0 0 24px 24px",
     },
-
     input: {
       flex: 1,
       padding: "12px 16px",
@@ -364,12 +329,10 @@ function Chatbot() {
       transition: "all 0.2s",
       fontFamily: "inherit",
     },
-
     inputFocused: {
       borderColor: "#667eea",
       boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
     },
-
     sendButton: {
       width: "44px",
       height: "44px",
@@ -385,7 +348,6 @@ function Chatbot() {
       transition: "all 0.2s",
       boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
     },
-
     sendButtonDisabled: {
       opacity: 0.5,
       cursor: "not-allowed",
@@ -587,26 +549,13 @@ function Chatbot() {
       {/* Animations */}
       <style>{`
         @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
         @keyframes bounce {
-          0%, 60%, 100% {
-            transform: translateY(0);
-          }
-          30% {
-            transform: translateY(-8px);
-          }
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-8px); }
         }
-
-        /* Mobile responsiveness */
         @media (max-width: 768px) {
           div[style*="width: 400px"] {
             width: calc(100vw - 48px) !important;

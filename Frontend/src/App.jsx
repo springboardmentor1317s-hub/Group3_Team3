@@ -7,8 +7,7 @@ import CollegeAdminDashboard from "./pages/dashboard/CollegeAdminDashboard";
 import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
 import AdminProfile from "./pages/profiledit/AdminProfile";
 import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
-<<<<<<< HEAD
-import Chatbot from "./components/Chatbot"; // ← ADD THIS
+import Chatbot from "./components/Chatbot";
 
 function App() {
   return (
@@ -26,23 +25,8 @@ function App() {
         <Route path="/admin/profile" element={<AdminProfile />} />
         <Route path="/super-admin/profile" element={<SuperAdminProfile />} />
       </Routes>
-      <Chatbot /> {/* ← ADD THIS */}
+      <Chatbot />
     </>
-=======
-
-function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/student/dashboard" element={<StudentDashboard />} />
-      <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
-      <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
-      <Route path="/admin/profile" element={<AdminProfile />} />
-      <Route path="/super-admin/profile" element={<SuperAdminProfile />} />
-    </Routes>
->>>>>>> 8b1b8d9 (milestone-1)
   );
 }
 

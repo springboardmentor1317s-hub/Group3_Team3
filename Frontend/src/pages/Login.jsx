@@ -34,34 +34,22 @@ function Login() {
         password: formData.password,
       });
 
+      // Backend now returns user and token at top level
       const user = res.data.user;
       const token = res.data.token;
 
       setToken(token);
       localStorage.setItem("token", token);
-      localStorage.setItem("role", user.accountType);
+      localStorage.setItem("role", user.role);
       localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("Login successful!");
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 8b1b8d9 (milestone-1)
-      // ✅ Routes match exactly what App.jsx defines
+      // Routes match exactly what App.jsx defines
       if (user.accountType === "Super Admin") {
         navigate("/super-admin/dashboard");
       } else if (user.accountType === "College Admin") {
         navigate("/admin/dashboard");
-<<<<<<< HEAD
-=======
-      if (user.accountType === "Super Admin") {
-        navigate("/superadmin-dashboard");
-      } else if (user.accountType === "College Admin") {
-        navigate("/admin-dashboard");
->>>>>>> d2ee16d (admin updates for milestone 1)
-=======
->>>>>>> 8b1b8d9 (milestone-1)
       } else {
         navigate("/student/dashboard");
       }
@@ -293,10 +281,6 @@ function Login() {
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Account Type</label>
-<<<<<<< HEAD
-<<<<<<< HEAD
-                <div style={styles.selectWrapper}>
-=======
                 <div
                   style={styles.selectWrapper}
                   onFocus={(e) => {
@@ -309,10 +293,6 @@ function Login() {
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 >
->>>>>>> d2ee16d (admin updates for milestone 1)
-=======
-                <div style={styles.selectWrapper}>
->>>>>>> 8b1b8d9 (milestone-1)
                   <div style={styles.selectIcon}>{getAccountIcon()}</div>
                   <select
                     name="role"
@@ -359,13 +339,7 @@ function Login() {
                 Sign In
               </button>
             </form>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 
->>>>>>> d2ee16d (admin updates for milestone 1)
-=======
->>>>>>> 8b1b8d9 (milestone-1)
             <p style={styles.signUpText}>
               Don't have an account?{" "}
               <Link to="/register" style={styles.link}>
