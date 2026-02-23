@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { removeToken } from "../../services/auth";
 import { toast } from "react-toastify";
+import Navbar from "../../components/Navbar"
 
 function CollegeAdminDashboard() {
   const navigate = useNavigate();
@@ -47,101 +48,10 @@ function CollegeAdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-purple-50">
       {/* Admin Navbar */}
-      <header className="bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
-            <div>
-              <h2 className="font-bold text-xl text-slate-900">
-                {user.college || "College"} Admin
-              </h2>
-              <p className="text-sm text-slate-500">
-                College Event Coordinator
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 relative group">
-            <button className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-100 transition-all duration-200">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg ring-2 ring-white/50">
-                <span className="text-white font-bold text-lg">A</span>
-              </div>
-              <div className="hidden md:block">
-                <p className="font-semibold text-slate-900 text-sm">
-                  {user.name || "Admin"}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {user.college || "College"}
-                </p>
-              </div>
-              <svg
-                className="w-4 h-4 text-slate-500 ml-1 transition-transform group-hover:rotate-180"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-
-            {/* Dropdown Menu */}
-            <div className="absolute right-0 top-full mt-3 w-64 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200 py-3 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 scale-95 group-hover:scale-100">
-              <Link
-                to="/admin/profile"
-                className="flex items-center gap-4 px-6 py-4 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 rounded-2xl mx-2 font-semibold text-slate-900 transition-all"
-              >
-                <svg
-                  className="w-6 h-6 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-                Edit Profile
-              </Link>
-
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent my-2 mx-4"></div>
-
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-6 py-4 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 rounded-2xl mx-2 font-semibold text-slate-900 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <svg
-                    className="w-6 h-6 text-red-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 16l4-4m0 0l-4-4m4 4H7"
-                    />
-                  </svg>
-                  Logout
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+     <Navbar />
+     
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
@@ -181,7 +91,7 @@ function CollegeAdminDashboard() {
               <div className="space-y-4">
                 <Link
                   to="/admin/create-event"
-                  className="group block p-6 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-100"
+                  className="group block p-6 rounded-2xl bg-linear-to-r from-purple-50 to-indigo-50 border-2 border-purple-100"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">➕</span>
@@ -192,7 +102,7 @@ function CollegeAdminDashboard() {
                 </Link>
                 <Link
                   to="/admin/registrations"
-                  className="group block p-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-100"
+                  className="group block p-6 rounded-2xl bg-linear-to-r from-emerald-50 to-teal-50 border-2 border-emerald-100"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">📋</span>
@@ -226,7 +136,7 @@ function CollegeAdminDashboard() {
                 </div>
                 <Link
                   to="/admin/event-details"
-                  className="w-full block bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 px-6 rounded-2xl text-center font-bold hover:brightness-105"
+                  className="w-full block bg-linear-to-r from-purple-500 to-purple-600 text-white py-3 px-6 rounded-2xl text-center font-bold hover:brightness-105"
                 >
                   View Details
                 </Link>
