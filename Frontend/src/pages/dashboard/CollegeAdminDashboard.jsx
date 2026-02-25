@@ -90,7 +90,7 @@ function CollegeAdminDashboard() {
               </h3>
               <div className="space-y-4">
                 <Link
-                  to="/admin/create-event"
+                  to="/admin/dashboard/create-event"
                   className="group block p-6 rounded-2xl bg-linear-to-r from-purple-50 to-indigo-50 border-2 border-purple-100"
                 >
                   <div className="flex items-center gap-3 mb-2">
@@ -101,7 +101,7 @@ function CollegeAdminDashboard() {
                   </div>
                 </Link>
                 <Link
-                  to="/admin/registrations"
+                  to="/admin/dashboard/events/registrations"
                   className="group block p-6 rounded-2xl bg-linear-to-r from-emerald-50 to-teal-50 border-2 border-emerald-100"
                 >
                   <div className="flex items-center gap-3 mb-2">
