@@ -160,6 +160,7 @@ function Register() {
                   >
                     <option value="student">Student</option>
                     <option value="college_admin">College Admin</option>
+                    <option value="super_admin">Super Admin</option>
                   </select>
                 </div>
 
