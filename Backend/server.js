@@ -6,14 +6,15 @@ import connectDB from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import chatbotRoutes from './routes/chatbot.routes.js';
+import eventRoutes from './routes/event.routes.js'; // ✅ FIX: Added event routes import
 import { errorHandler } from './middleware/errorHandler.js';
 
-// dotenv 1st line la load pannu!
+// Load .env variables FIRST before anything else
 dotenv.config();
 
 const app = express();
 
-// Connect to MongoDB (ippo DB_URI available!)
+// Connect to MongoDB
 connectDB();
 
 // Middleware
@@ -32,13 +33,14 @@ app.get('/', (req, res) => {
     message: 'CampusEventHub API is running',
     version: '1.0.0',
     milestone: 'Milestone 1 - Authentication & User Management',
-    features: ['Authentication', 'User Management', 'AI Chatbot']
+    features: ['Authentication', 'User Management', 'AI Chatbot', 'Events'] // ✅ Added Events
   });
 });
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/events', eventRoutes); // ✅ FIX: Registered event routes
 
 // Error handling
 app.use(errorHandler);
@@ -49,6 +51,7 @@ app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🤖 Chatbot: Enabled at /api/chatbot`);
+  console.log(`🎉 Events: Enabled at /api/events`); // ✅ Added log
 });
 
 export default app;

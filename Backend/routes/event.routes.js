@@ -1,18 +1,14 @@
-const express = require('express');
+import express from 'express';
+import { createEvent, getEvents } from '../controllers/eventController.js';
+import { protect } from '../middleware/auth.middleware.js';
+
 const router = express.Router();
 
-// Mock Create Event API (Temporary)
-router.post('/create', (req, res) => {
-  try {
-    console.log('📤 Event Data:', req.body);
-    res.status(201).json({ 
-      success: true, 
-      message: 'Event created successfully!',
-      event: { ...req.body, id: 'temp123' }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
+// ✅ FIX 5: Wired up real createEvent controller instead of mock handler
+//           Protected route — user must be logged in to create an event
+router.post('/create', protect, createEvent);
 
-module.exports = router;
+// GET all events (public)
+router.get('/', getEvents);
+
+export default router;
