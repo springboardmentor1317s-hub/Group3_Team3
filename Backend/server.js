@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
+import eventRoutes from './routes/events.routes.js';
 import chatbotRoutes from './routes/chatbot.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -38,6 +39,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/events', eventRoutes);
 
 // Error handling
 app.use(errorHandler);

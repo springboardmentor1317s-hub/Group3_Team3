@@ -12,6 +12,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import CreateEvent from "./pages/event/CreateEvent"
 import EditEvent from "./pages/event/EditEvent"
 import ManageRegistrations from "./pages/event/ManageRegistrations"
+import Events from "./pages/event/Events";
 
 function App() {
   return (
@@ -31,7 +32,16 @@ function App() {
         />
         <Route path="/super-admin/profile" element={<SuperAdminProfile />} />
 
-          
+
+          {/* ---------- General Protected Routes ---------- */}
+          <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <Events />
+            </ProtectedRoute>
+          }
+        />
 
         {/* ---------- College Admin Routes ---------- */}
         <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
