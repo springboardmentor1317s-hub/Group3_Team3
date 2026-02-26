@@ -2,9 +2,8 @@ import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
-    
-    
-    const conn = await mongoose.connect(process.env.MONGO_URI, {  // ← MONGO_URI!
+    // ✅ DB_URI use pannu (en .env la DB_URI irukku!)
+    const conn = await mongoose.connect(process.env.DB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -18,7 +17,7 @@ const connectDB = async () => {
 };
 
 mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ MongoDB disconnected');
+  console.log('⚠️  MongoDB disconnected');
 });
 
 mongoose.connection.on('error', (err) => {

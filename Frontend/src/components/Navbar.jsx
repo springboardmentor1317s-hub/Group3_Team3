@@ -16,16 +16,8 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const token = getToken();
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const user = JSON.parse(localStorage.getItem("user")) || null;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // ✅ Get First & Last Initials (HS format)
-  const getInitials = (name) => {
-    if (!name || typeof name !== "string") return "";
-    const parts = name.trim().split(" ").filter(Boolean);
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
 
   const handleLogout = () => {
     removeToken();
@@ -38,95 +30,97 @@ function Navbar() {
 
   const isActive = (path) => location.pathname === path;
 
-  // ✅ FIXED (using role instead of accountType)
   const getDashboardPath = () => {
-    if (user?.role === "student") return "/student-dashboard";
-    if (user?.role === "college admin") return "/admin-dashboard";
-    if (user?.role === "super admin") return "/superadmin-dashboard";
+    if (user?.accountType === "Student") return "/student/dashboard";
+    if (user?.accountType === "College Admin") return "/admin/dashboard";
+    if (user?.accountType === "Super Admin") return "/super-admin/dashboard";
     return "/";
   };
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
-            
-            {/* Brand */}
-            <Link to="/" className="flex items-center gap-2">
-              <span className="text-3xl font-black bg-gradient-to-r from-purple-600 via-purple-500 to-purple-600 bg-clip-text text-transparent">
-                CampusHub
-              </span>
+            {/* Brand - FIXED */}
+            <Link
+              to="/"
+              className="flex items-center gap-2 text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-2xl font-extrabold"
+            >
+              CampusHub
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center justify-center flex-1 gap-3">
+            <div className="hidden md:flex items-center justify-center flex-1 gap-4">
               {token && (
                 <>
                   <Link
                     to="/events"
-                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all duration-300
+                    className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300
                       ${
                         isActive("/events")
-                          ? "bg-white text-purple-600 border-2 border-purple-600 shadow-md"
-                          : "bg-white text-purple-600 border-2 border-purple-400 hover:border-purple-600"
+                          ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
+                          : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
                       }`}
                   >
-                    <FaCalendar />
+                    <FaCalendar className="text-lg" />
                     <span>Events</span>
                   </Link>
 
                   <Link
                     to={getDashboardPath()}
-                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-base transition-all duration-300
+                    className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300
                       ${
-                        isActive("/student-dashboard") ||
-                        isActive("/admin-dashboard") ||
+                        isActive("/user-dashboard") ||
+                        isActive("/admin/dashboard") ||
                         isActive("/superadmin-dashboard")
-                          ? "bg-white text-purple-600 border-2 border-purple-600 shadow-md"
-                          : "bg-white text-purple-600 border-2 border-purple-400 hover:border-purple-600"
+                          ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
+                          : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
                       }`}
                   >
-                    <FaChartLine />
+                    <FaChartLine className="text-lg" />
                     <span>Dashboard</span>
                   </Link>
                 </>
               )}
             </div>
 
-            {/* Desktop Right Section */}
+            {/* Right Section (Desktop) */}
             <div className="hidden md:flex items-center gap-4">
               {token ? (
                 <>
-                  {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                    {getInitials(user?.name)}
+                  <div className="flex items-center gap-3 pl-3 pr-5 py-2 border border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full shadow-sm">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md uppercase">
+                      {user?.fullName?.charAt(0)}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-gray-800">
+                        {user?.fullName}
+                      </p>
+                      <p className="text-xs text-gray-500">{user?.accountType}</p>
+                    </div>
                   </div>
-
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all"
                   >
-                    <FaRightFromBracket />
-                    <span className="text-sm">Logout</span>
+                    <FaRightFromBracket /> Logout
                   </button>
                 </>
               ) : (
                 <>
                   <Link
                     to="/login"
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold text-sm text-purple-600 border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300"
+                    className="flex items-center gap-2 px-5 py-2 rounded-full border-2 border-indigo-500 text-indigo-600 font-semibold text-sm hover:bg-indigo-50 transition-all"
                   >
-                    <FaRightToBracket />
-                    <span>Login</span>
+                    <FaRightToBracket /> Login
                   </Link>
-
                   <Link
                     to="/register"
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full shadow-lg transition-all duration-300"
+                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all"
                   >
-                    <FaUserPlus />
-                    <span>Register</span>
+                    <FaUserPlus /> Register
                   </Link>
                 </>
               )}
@@ -135,7 +129,7 @@ function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="md:hidden p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
+              className="md:hidden p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
             >
               <FaBars className="text-2xl" />
             </button>
@@ -146,50 +140,103 @@ function Navbar() {
       {/* Mobile Overlay */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsMenuOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
         />
       )}
 
       {/* Mobile Menu */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 md:hidden
-        transform transition-transform duration-300 ease-in-out
-        ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed top-0 right-0 w-72 h-full bg-white shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out
+          ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="flex flex-col h-full p-6">
+          {/* Close Button */}
           <button
             onClick={() => setIsMenuOpen(false)}
-            className="self-end p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+            className="self-end p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
           >
             <FaXmark className="text-2xl" />
           </button>
 
+          {/* User Info */}
           {token && (
             <>
-              <div className="flex items-center gap-3 px-4 py-3 mt-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
-                  {getInitials(user?.name)}
+              <div className="flex items-center gap-3 px-4 py-3 mt-6 bg-indigo-50 rounded-xl border border-indigo-200">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                  {user?.fullName?.charAt(0)}
                 </div>
-                <div>
-                  <p className="text-sm font-bold">{user?.name}</p>
-                  <p className="text-xs text-slate-600">{user?.role}</p>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-900 text-sm">
+                    {user?.fullName}
+                  </span>
+                  <span className="text-xs text-gray-600">{user?.accountType}</span>
                 </div>
               </div>
+              <hr className="my-6 border-indigo-200" />
             </>
           )}
 
-          <div className="mt-auto">
+          <nav className="flex flex-col gap-3">
             {token && (
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-600 text-white font-semibold rounded-xl shadow-lg"
-              >
-                <FaRightFromBracket />
-                Logout
-              </button>
+              <>
+                <Link
+                  to="/events"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`flex items-center gap-3 px-5 py-3 rounded-lg font-semibold text-sm transition-all
+                    ${
+                      isActive("/events")
+                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
+                        : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
+                    }`}
+                >
+                  <FaCalendar /> Events
+                </Link>
+                <Link
+                  to={getDashboardPath()}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`flex items-center gap-3 px-5 py-3 rounded-lg font-semibold text-sm transition-all
+                    ${
+                      isActive("/user-dashboard") ||
+                      isActive("/admin-dashboard") ||
+                      isActive("/superadmin-dashboard")
+                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
+                        : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
+                    }`}
+                >
+                  <FaChartLine /> Dashboard
+                </Link>
+              </>
             )}
-          </div>
+          </nav>
+
+          <hr className="my-6 border-indigo-200" />
+
+          {token ? (
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold text-sm shadow-md hover:shadow-lg transition"
+            >
+              <FaRightFromBracket /> Logout
+            </button>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <Link
+                to="/login"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2 px-5 py-3 rounded-full border-2 border-indigo-500 text-indigo-600 font-semibold text-sm hover:bg-indigo-50 transition"
+              >
+                <FaRightToBracket /> Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold text-sm shadow-md hover:shadow-lg transition"
+              >
+                <FaUserPlus /> Register
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </>

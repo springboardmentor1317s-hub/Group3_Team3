@@ -1,20 +1,20 @@
 import User from '../models/User.model.js';
 import { generateToken, setTokenCookie, clearTokenCookie } from '../utils/jwt.utils.js';
 
-/**
- * @desc    Register a new user
- * @route   POST /api/auth/register
- * @access  Public
- */
+// Maps DB role ('college_admin') → display string ('College Admin') for frontend
+const roleToAccountType = (role) => {
+  const map = {
+    student: 'Student',
+    college_admin: 'College Admin',
+    super_admin: 'Super Admin',
+  };
+  return map[role] || 'Student';
+};
+
 export const register = async (req, res) => {
   try {
     const { name, email, password, college, role } = req.body;
-      console.log("🔥 REGISTER DATA RECEIVED:", req.body);
-    console.log("📧 Email:", email);
-    console.log("🏫 College:", college);
-    console.log("👤 Role:", role);
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -23,38 +23,31 @@ export const register = async (req, res) => {
       });
     }
 
-    // Create user
     const user = await User.create({
       name,
-      email,
+      email: email.toLowerCase(),
       password,
       college,
-      role: role || 'student' // Default to student if not specified
+      role: role || 'student'
     });
 
-    // console.log(user.name)
-
-    // Generate token
     const token = generateToken(user._id);
-
-    console.log(token)
-
-    // Set token in cookie
     setTokenCookie(res, token);
+
+    const accountType = roleToAccountType(user.role);
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          college: user.college,
-          role: user.role
-        },
-        token
-      }
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        college: user.college,
+        role: user.role,
+        accountType
+      },
+      token
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -66,67 +59,42 @@ export const register = async (req, res) => {
   }
 };
 
-/**
- * @desc    Login user
- * @route   POST /api/auth/login
- * @access  Public
- */
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if user exists and include password field
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Your account has been deactivated. Please contact support.'
-      });
-    }
-
-    // Verify password
     const isPasswordMatch = await user.comparePassword(password);
-
     if (!isPasswordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate token
     const token = generateToken(user._id);
-
-    // Set token in cookie
     setTokenCookie(res, token);
+
+    const accountType = roleToAccountType(user.role);
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          college: user.college,
-          role: user.role,
-          lastLogin: user.lastLogin
-        },
-        token
-      }
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        college: user.college,
+        role: user.role,
+        accountType,
+        lastLogin: user.lastLogin
+      },
+      token
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -138,59 +106,49 @@ export const login = async (req, res) => {
   }
 };
 
-/**
- * @desc    Logout user
- * @route   POST /api/auth/logout
- * @access  Private
- */
 export const logout = async (req, res) => {
   try {
-    // Clear token cookie
     clearTokenCookie(res);
-
     res.status(200).json({
       success: true,
       message: 'Logout successful'
     });
   } catch (error) {
-    console.error('Logout error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error logging out',
-      error: error.message
+      message: 'Error logging out'
     });
   }
 };
 
-/**
- * @desc    Get current logged in user
- * @route   GET /api/auth/me
- * @access  Private
- */
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      college: user.college,
+      role: user.role,
+      accountType: roleToAccountType(user.role),
+      lastLogin: user.lastLogin,
+      createdAt: user.createdAt
+    };
+
     res.status(200).json({
       success: true,
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          college: user.college,
-          role: user.role,
-          lastLogin: user.lastLogin,
-          createdAt: user.createdAt
-        }
-      }
+      user: userData,
+      data: { user: userData }
     });
   } catch (error) {
-    console.error('Get me error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching user data',
-      error: error.message
+      message: 'Error fetching user data'
     });
   }
 };
