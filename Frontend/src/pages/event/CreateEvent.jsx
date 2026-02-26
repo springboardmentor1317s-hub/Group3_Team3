@@ -31,7 +31,7 @@ function CreateEvent() {
         return;
       }
 
-      const response = await api.post("/events", formData, {
+      const response = await api.post("/events/create_events", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -44,9 +44,9 @@ function CreateEvent() {
       const user = JSON.parse(localStorage.getItem("user"));
 
       if (user?.accountType === "Super Admin") {
-        navigate("/superadmin-dashboard");
+        navigate("/super-admin/dashboard");
       } else if (user?.accountType === "College Admin") {
-        navigate("/admin-dashboard");
+        navigate("/admin/dashboard");
       } else {
         navigate("/");
       }
