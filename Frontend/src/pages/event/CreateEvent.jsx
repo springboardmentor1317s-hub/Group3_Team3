@@ -1,6 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ ADDED
+import api from "../../services/api";
 
 function CreateEvent() {
+  const navigate = useNavigate(); // ✅ ADDED
+
   const [formData, setFormData] = useState({
     // Basic Info
     title: "",
@@ -76,48 +80,91 @@ function CreateEvent() {
     });
   };
 
-  // ✅ FIX 1: handleSubmit is properly connected via <form onSubmit={handleSubmit}>
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const data = new FormData();
-    Object.keys(formData).forEach((key) => {
-      if (formData[key] !== null && formData[key] !== "") {
-        if (
-          typeof formData[key] === "object" &&
-          !Array.isArray(formData[key])
-        ) {
-          data.append(key, JSON.stringify(formData[key]));
-        } else if (Array.isArray(formData[key])) {
-          data.append(key, JSON.stringify(formData[key]));
-        } else {
-          data.append(key, formData[key]);
-        }
-      }
-    });
+    // Validation
+    if (!formData.title?.trim()) {
+      alert("❌ Event title is required");
+      return;
+    }
+    if (!formData.description?.trim()) {
+      alert("❌ Event description is required");
+      return;
+    }
+    if (!formData.location?.trim()) {
+      alert("❌ Event location is required");
+      return;
+    }
+    if (!formData.organizer?.trim()) {
+      alert("❌ Organizer name is required");
+      return;
+    }
+    if (!formData.start_date) {
+      alert("❌ Start date is required");
+      return;
+    }
+    if (!formData.end_date) {
+      alert("❌ End date is required");
+      return;
+    }
+    if (!formData.registration_end) {
+      alert("❌ Registration deadline is required");
+      return;
+    }
+    if (!formData.category) {
+      alert("❌ Event category is required");
+      return;
+    }
+
+    const eventData = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      location: formData.location,
+      venue: formData.venue || "",
+      organizer: formData.organizer,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+      registration_start: formData.registration_start || new Date(),
+      registration_end: formData.registration_end,
+      max_participants: formData.max_participants || 100,
+      registration_fee: formData.registration_fee || 0,
+      event_type: formData.event_type || "offline",
+      status: formData.status || "draft",
+      tags: formData.tags || "",
+      requirements: formData.requirements || "",
+      is_featured: formData.is_featured || false,
+      prizes: formData.prizes || [],
+      schedule: formData.schedule || [],
+      contact: formData.contact || {},
+      social_links: formData.social_links || {},
+      rules_and_regulations: formData.rules_and_regulations || "",
+      eligibility: formData.eligibility || "",
+      certificates: formData.certificates || false,
+      certificate_template: formData.certificate_template || "",
+    };
 
     try {
-      // ✅ FIX 2: Corrected API endpoint from /api/events → /api/events/create
-      const res = await fetch("http://localhost:5000/api/events/create", {
-        method: "POST",
-        credentials: "include",
-        body: data,
-      });
+      const result = await api.post("/events/create", eventData);
 
-      const result = await res.json();
-      if (res.ok) {
+      if (result.status === 200 || result.status === 201) {
         alert("✅ Event Created Successfully!");
+        // ✅ ADDED: Redirect to dashboard after success
+        navigate("/admin/dashboard");
       } else {
-        alert("❌ " + result.message);
+        alert("❌ " + (result.data?.message || "Failed to create event"));
       }
     } catch (error) {
-      alert("❌ Server error!");
+      alert(
+        "❌ " +
+          (error.response?.data?.message || error.message || "Server error!"),
+      );
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 p-6">
-      {/* ✅ FIX 1: Wrapped entire form in <form onSubmit={handleSubmit}> tag */}
       <form onSubmit={handleSubmit}>
         <div className="max-w-6xl mx-auto">
           <h1 className="text-5xl font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 bg-clip-text text-transparent mb-16 text-center drop-shadow-2xl">
@@ -188,6 +235,9 @@ function CreateEvent() {
                     <option value="technical">💻 Technical</option>
                     <option value="sports">⚽ Sports</option>
                     <option value="workshop">📚 Workshop</option>
+                    <option value="hackathon">💡 Hackathon</option>
+                    <option value="seminar">🎤 Seminar</option>
+                    <option value="other">🌟 Other</option>
                   </select>
                 </div>
                 <div>
@@ -208,7 +258,6 @@ function CreateEvent() {
               {/* Location + Venue */}
               <div className="grid grid-cols-2 gap-8 mb-10">
                 <div>
-                  {/* ✅ FIX 3: Added required to location input (required by DB model) */}
                   <label className="block text-sm font-bold text-gray-700 mb-4">
                     Location *
                   </label>
@@ -267,9 +316,8 @@ function CreateEvent() {
                       name="start_date"
                       value={formData.start_date}
                       onChange={handleInputChange}
-                      className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl 
-                                shadow-lg hover:shadow-xl transition-all duration-300"
                       required
+                      className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
                     />
                   </div>
                   <div>
@@ -281,9 +329,8 @@ function CreateEvent() {
                       name="end_date"
                       value={formData.end_date}
                       onChange={handleInputChange}
-                      className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl 
-                                shadow-lg hover:shadow-xl transition-all duration-300"
                       required
+                      className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
                     />
                   </div>
                   <div>
@@ -300,19 +347,19 @@ function CreateEvent() {
                   </div>
                   <div>
                     <label className="block font-bold text-gray-700 mb-3">
-                      Registration End
+                      Registration End *
                     </label>
                     <input
                       type="date"
                       name="registration_end"
                       value={formData.registration_end}
                       onChange={handleInputChange}
+                      required
                       className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl shadow-lg"
                     />
                   </div>
                 </div>
 
-                {/* Registration Settings */}
                 <div className="grid grid-cols-2 gap-6 mt-8 pt-8 border-t-2 border-emerald-200">
                   <div>
                     <label className="block font-bold text-gray-700 mb-3">
@@ -323,9 +370,8 @@ function CreateEvent() {
                       name="max_participants"
                       value={formData.max_participants}
                       onChange={handleInputChange}
-                      className="w-full px-6 py-5 bg-white/90 border-2 
-                      border-purple-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all"
                       min="1"
+                      className="w-full px-6 py-5 bg-white/90 border-2 border-purple-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all"
                     />
                   </div>
                   <div>
@@ -337,9 +383,8 @@ function CreateEvent() {
                       name="registration_fee"
                       value={formData.registration_fee}
                       onChange={handleInputChange}
-                      className="w-full px-6 py-5 bg-white/90 border-2 
-                      border-amber-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all"
                       step="0.01"
+                      className="w-full px-6 py-5 bg-white/90 border-2 border-amber-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all"
                     />
                   </div>
                 </div>
@@ -394,8 +439,7 @@ function CreateEvent() {
                       name="is_featured"
                       checked={formData.is_featured}
                       onChange={handleInputChange}
-                      className="w-8 h-8 text-emerald-600 rounded-xl mr-4 
-                      focus:ring-emerald-500 border-2 border-emerald-400 shadow-lg transform hover:scale-110"
+                      className="w-8 h-8 text-emerald-600 rounded-xl mr-4 focus:ring-emerald-500 border-2 border-emerald-400 shadow-lg transform hover:scale-110"
                     />
                     <span className="text-xl font-bold text-emerald-800">
                       ⭐ Featured Event
@@ -438,8 +482,7 @@ function CreateEvent() {
                             e.target.value,
                           )
                         }
-                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md 
-                                   focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
+                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
                       />
                       <input
                         placeholder="Trophy"
@@ -452,8 +495,7 @@ function CreateEvent() {
                             e.target.value,
                           )
                         }
-                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md 
-                                   focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
+                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
                       />
                       <input
                         type="number"
@@ -467,8 +509,7 @@ function CreateEvent() {
                             e.target.value,
                           )
                         }
-                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md 
-                                   focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
+                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
                       />
                     </div>
                     <button
@@ -484,7 +525,7 @@ function CreateEvent() {
                 ))}
               </div>
 
-              {/* ✅ FIX 1: Submit button is now INSIDE the <form> tag so it properly triggers onSubmit */}
+              {/* Submit Button */}
               <button
                 type="submit"
                 className="w-full col-span-2 lg:col-span-1 bg-gradient-to-r 

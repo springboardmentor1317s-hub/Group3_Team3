@@ -1,68 +1,77 @@
 import Event from '../models/Event.js';
+import mongoose from 'mongoose';
 
 export const createEvent = async (req, res) => {
   try {
-    // ✅ Destructure all fields sent from the CreateEvent frontend form
+    console.log('📥 Received event data:', req.body);
+    console.log('🖼️  Uploaded file:', req.file);
+
     const {
-      title,
-      description,
-      category,
-      location,
-      venue,
-      organizer,
-      start_date,
-      end_date,
-      registration_start,
-      registration_end,
-      max_participants,
-      registration_fee,
-      event_type,
-      status,
-      tags,
-      requirements,
-      is_featured,
-      prizes,
-      schedule,
-      contact,
-      social_links,
-      rules_and_regulations,
-      eligibility,
-      certificates,
+      title, description, category, location, venue, organizer,
+      college_id, start_date, end_date, registration_start,
+      registration_end, max_participants, registration_fee,
+      event_type, status, tags, requirements, is_featured,
+      prizes, schedule, contact, social_links,
+      rules_and_regulations, eligibility, certificates,
       certificate_template,
     } = req.body;
 
+    // Safely handle college_id
+    let resolvedCollegeId;
+    if (college_id && mongoose.Types.ObjectId.isValid(college_id)) {
+      resolvedCollegeId = new mongoose.Types.ObjectId(college_id);
+    } else {
+      resolvedCollegeId = new mongoose.Types.ObjectId();
+    }
+
+    // Handle tags
+    let parsedTags = [];
+    if (tags) {
+      parsedTags = Array.isArray(tags)
+        ? tags
+        : String(tags).split(',').map(t => t.trim()).filter(Boolean);
+    }
+
+    // These come as real objects from JSON body — NO JSON.parse needed
+    const parsedPrizes      = Array.isArray(prizes)      ? prizes      : [];
+    const parsedSchedule    = Array.isArray(schedule)     ? schedule    : [];
+    const parsedContact     = (contact && typeof contact === 'object')      ? contact     : {};
+    const parsedSocialLinks = (social_links && typeof social_links === 'object') ? social_links : {};
+
+    // ✅ Build full URL for image so frontend can display it
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    }
+
     const newEvent = new Event({
-      // college_id comes from the logged-in user (via protect middleware)
-      college_id: req.user.id,
-      organizer: organizer || req.user.name || 'Admin',
+      college_id:            resolvedCollegeId,
+      organizer:             organizer || 'Admin',
       title,
       description,
       category,
       location,
-      venue,
+      venue:                 venue || '',
       start_date,
       end_date,
-      registration_start: registration_start || Date.now(),
-      // registration_end falls back to end_date if not provided
-      registration_end: registration_end || end_date,
-      max_participants,
-      registration_fee,
-      event_type,
-      status: status || 'draft',
-      tags,
-      requirements,
-      is_featured,
-      // Parse JSON strings back to objects/arrays (sent as JSON.stringify from FormData)
-      prizes: prizes ? JSON.parse(prizes) : [],
-      schedule: schedule ? JSON.parse(schedule) : [],
-      contact: contact ? JSON.parse(contact) : {},
-      social_links: social_links ? JSON.parse(social_links) : {},
-      rules_and_regulations,
-      eligibility,
-      certificates,
-      certificate_template,
-      // Handle uploaded image file if present
-      image_url: req.file ? req.file.path : undefined,
+      registration_start:    registration_start || new Date(),
+      registration_end:      registration_end || end_date,
+      max_participants:      max_participants || 100,
+      registration_fee:      registration_fee || 0,
+      event_type:            event_type || 'offline',
+      status:                status || 'published', // ✅ Default to published
+      tags:                  parsedTags,
+      requirements:          requirements || '',
+      is_featured:           is_featured === true || is_featured === 'true',
+      prizes:                parsedPrizes,
+      schedule:              parsedSchedule,
+      contact:               parsedContact,
+      social_links:          parsedSocialLinks,
+      rules_and_regulations: rules_and_regulations || '',
+      eligibility:           eligibility || 'Open to all college students',
+      certificates:          certificates === true || certificates === 'true',
+      certificate_template:  certificate_template || '',
+      image_url:             imageUrl, // ✅ Full URL saved
     });
 
     const event = await newEvent.save();
@@ -72,9 +81,13 @@ export const createEvent = async (req, res) => {
       message: 'Event created successfully!',
       event,
     });
+
   } catch (err) {
-    console.error('Create event error:', err);
-    res.status(500).json({ success: false, message: 'Server Error', error: err.message });
+    console.error('❌ Create event error:', err.message);
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Server Error',
+    });
   }
 };
 
@@ -94,3 +107,11 @@ export const getEvents = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server Error', error: err.message });
   }
 };
+
+
+
+
+
+
+
+
