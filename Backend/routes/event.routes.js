@@ -7,7 +7,7 @@ const router = express.Router();
 // ✅ FIX 5: Wired up real createEvent controller instead of mock handler
 //           Protected route — user must be logged in to create an event
 router.post('/create', protect, createEvent);
-
+router.get("/", protect, getEvents);
 // GET all events (public)
 router.get('/', getEvents);
 

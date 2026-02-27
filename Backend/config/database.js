@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const connectDB = async () => {
   try {
     // ✅ DB_URI use pannu (en .env la DB_URI irukku!)
-    const conn = await mongoose.connect(process.env.DB_URI, {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
