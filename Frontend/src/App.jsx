@@ -13,6 +13,7 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
+import EventDetails from "./pages/event/EventDetails";
 // import StudentEvents from "./pages/studentevents/StudentEvents"; // ✅ FIXED path
 
 // Super Admin imports
@@ -72,6 +73,14 @@ function App() {
           element={
             <ProtectedRoute role="college_admin">
               <CollegeEvents />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+          path="/events/:id"
+          element={
+            <ProtectedRoute>
+              <EventDetails />
             </ProtectedRoute>
           }
         />

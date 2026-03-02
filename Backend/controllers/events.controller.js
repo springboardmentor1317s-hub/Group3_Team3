@@ -62,6 +62,7 @@ export const getEvents = async (req, res) => {
 export const getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
+    console.log(event)
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
     res.json({ success: true, event });
   } catch (err) {

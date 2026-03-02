@@ -195,7 +195,7 @@ useEffect(() => {
                       {event.location}
                     </p>
                     <Link
-                      to="/student/events"
+                      to={`/events/${event._id}`}
                       className="text-xs text-indigo-600 font-semibold hover:underline"
                     >
                       View Details →
