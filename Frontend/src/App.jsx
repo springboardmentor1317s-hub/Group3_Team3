@@ -8,6 +8,7 @@ import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
 import AdminProfile from "./pages/profiledit/AdminProfile";
 import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
 import Chatbot from "./components/Chatbot";
+<<<<<<< HEAD
 import ProtectedRoute from "./components/ProtectedRoute";
 import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
@@ -20,6 +21,13 @@ import PendingEvents from "./pages/superadmin/PendingEvents";
 import AllColleges from "./pages/superadmin/AllColleges";
 import CollegeDetails from "./pages/superadmin/CollegeDetails";
 import Analytics from "./pages/superadmin/Analytics";
+=======
+import ProtectedRoute from "./components/ProtectedRoute"
+import CreateEvent from "./pages/event/CreateEvent"
+import EditEvent from "./pages/event/EditEvent"
+import ManageRegistrations from "./pages/event/ManageRegistrations"
+import Events from "./pages/event/Events";
+>>>>>>> 51eb104315fb2d146c3fd9878c5d4e6aaa73ba39
 
 function App() {
   return (
@@ -50,7 +58,23 @@ function App() {
         <Route path="/super-admin/pending-events" element={<PendingEvents />} />
         <Route path="/super-admin/reports" element={<Analytics />} />
 
+<<<<<<< HEAD
         {/* College Admin Routes */}
+=======
+
+          {/* ---------- General Protected Routes ---------- */}
+          <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <Events />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ---------- College Admin Routes ---------- */}
+        <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
+>>>>>>> 51eb104315fb2d146c3fd9878c5d4e6aaa73ba39
         <Route path="/admin/profile" element={<AdminProfile />} />
 
         {/* Specific College Admin Routes FIRST */}
