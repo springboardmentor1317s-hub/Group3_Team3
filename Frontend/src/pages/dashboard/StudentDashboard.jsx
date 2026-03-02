@@ -18,23 +18,38 @@ function StudentDashboard() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await api.get("/events");
-        const all = res.data.events || [];
-        const now = new Date();
-        setUpcomingEvents(
-          all.filter((e) => new Date(e.start_date) >= now).slice(0, 6),
-        );
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const res = await api.get("/events");
+      const all = res.data.events || [];
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // reset to start of day
+
+      const filteredEvents = all
+        .filter((e) => {
+          if (!e.start_date) return false;
+          const eventDate = new Date(e.start_date);
+          eventDate.setHours(0, 0, 0, 0);
+          return eventDate >= today;
+        })
+        .sort(
+          (a, b) =>
+            new Date(a.start_date) - new Date(b.start_date)
+        )
+        .slice(0, 6);
+
+      setUpcomingEvents(filteredEvents);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
 
   const stats = [
     {

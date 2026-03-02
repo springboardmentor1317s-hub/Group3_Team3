@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
-import eventRoutes from './routes/events.routes.js';
+// import eventRoutes from './routes/events.routes.js';
 import chatbotRoutes from './routes/chatbot.routes.js';
 import eventRoutes from './routes/event.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';

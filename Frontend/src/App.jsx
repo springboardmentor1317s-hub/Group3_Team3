@@ -13,7 +13,7 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
-import StudentEvents from "./pages/studentevents/StudentEvents"; // ✅ FIXED path
+// import StudentEvents from "./pages/studentevents/StudentEvents"; // ✅ FIXED path
 
 // Super Admin imports
 import PendingColleges from "./pages/superadmin/PendingColleges";
@@ -31,7 +31,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         {/* Student Routes */}
         <Route path="/student/dashboard" element={<StudentDashboard />} />
-        <Route path="/student/events" element={<StudentEvents />} />{" "}
+        {/* <Route path="/student/events" element={<StudentEvents />} />{" "} */}
         {/* ✅ ADDED */}
         {/* Super Admin Routes */}
         <Route
@@ -48,14 +48,14 @@ function App() {
         <Route path="/super-admin/pending-events" element={<PendingEvents />} />
         <Route path="/super-admin/reports" element={<Analytics />} />
         {/* General Events Route */}
-        <Route
+        {/* <Route
           path="/events"
           element={
             <ProtectedRoute>
-              <StudentEvents /> {/* ✅ FIXED: was Events, now StudentEvents */}
+              <StudentEvents /> 
             </ProtectedRoute>
           }
-        />
+        /> */}
         {/* College Admin Routes */}
         <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
         <Route path="/admin/profile" element={<AdminProfile />} />
