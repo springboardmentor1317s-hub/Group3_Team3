@@ -13,8 +13,6 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
-import StudentEvents from "./pages/studentevents/StudentEvents";
-
 
 // Super Admin imports
 import PendingColleges from "./pages/superadmin/PendingColleges";
@@ -41,9 +39,7 @@ function App() {
         <Route
           path="/super-admin/dashboard"
           element={<SuperAdminDashboard />}
-          
         />
-
         <Route path="/super-admin/profile" element={<SuperAdminProfile />} />
         <Route path="/super-admin/colleges" element={<AllColleges />} />
         <Route path="/super-admin/colleges/:id" element={<CollegeDetails />} />
@@ -56,7 +52,6 @@ function App() {
 
         {/* College Admin Routes */}
         <Route path="/admin/profile" element={<AdminProfile />} />
-        
 
         {/* Specific College Admin Routes FIRST */}
         <Route
@@ -113,7 +108,6 @@ function App() {
             </div>
           }
         />
-        <Route path="/student/events" element={<StudentEvents />} /> 
       </Routes>
       <Chatbot />
     </BrowserRouter>

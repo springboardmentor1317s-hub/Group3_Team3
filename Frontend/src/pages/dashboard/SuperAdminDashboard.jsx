@@ -1,159 +1,246 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
+import api from "../../services/api";
+import { getUser } from "../../services/auth";
+import {
+  FaCalendarAlt,
+  FaUsers,
+  FaShieldAlt,
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaServer,
+  FaDatabase,
+  FaBolt,
+} from "react-icons/fa";
 
 function SuperAdminDashboard() {
-  const [profile, setProfile] = useState({
-    name: "Platform Super Admin",
-    email: "super@eventhub.com"
-  });
+  const user = getUser();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const systemStats = [
-    { label: "Total Colleges", value: "47", subtitle: "+12% MoM", icon: "🏫", color: "indigo" },
-    { label: "Total Events", value: "156", subtitle: "+45% MoM", icon: "🎉", color: "purple" },
-    { label: "Total Students", value: "24.5K", subtitle: "Active users", icon: "👥", color: "emerald" },
-    { label: "Platform Revenue", value: "₹8.25L", subtitle: "This month", icon: "💰", color: "amber" }
+  useEffect(() => {
+    api
+      .get("/events")
+      .then((r) => setEvents(r.data.events || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const stats = [
+    {
+      label: "Total Events",
+      value: events.length,
+      change: "+12%",
+      icon: <FaCalendarAlt />,
+      color: "from-indigo-500 to-purple-600",
+    },
+    {
+      label: "Active Users",
+      value: "1,234",
+      change: "+8%",
+      icon: <FaUsers />,
+      color: "from-emerald-500 to-teal-600",
+    },
+    {
+      label: "Total Registrations",
+      value: events.reduce((s, e) => s + (e.current_participants || 0), 0),
+      change: "+23%",
+      icon: <FaCheckCircle />,
+      color: "from-blue-500 to-cyan-600",
+    },
+    {
+      label: "Pending Reviews",
+      value: 0,
+      change: "-2%",
+      icon: <FaExclamationTriangle />,
+      color: "from-orange-400 to-pink-500",
+    },
   ];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/50">
-      <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-12">
-          <div>
-            <h1 className="text-5xl font-black bg-gradient-to-r from-purple-800 via-indigo-800 to-purple-900 bg-clip-text text-transparent">
-              Admin Dashboard
-            </h1>
-            <p className="text-xl text-slate-600 mt-2 font-semibold">Platform-wide performance overview</p>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-slate-600 font-medium">
-            <span>👋 Welcome back,</span>
-            <span className="font-semibold text-purple-700 bg-purple-100 px-3 py-1 rounded-full">
-              {profile.name}
-            </span>
-          </div>
-        </div>
+  const systemHealth = [
+    { label: "Server Status", value: "Healthy", color: "text-green-600" },
+    { label: "Database", value: "Connected", color: "text-green-600" },
+    { label: "API Response", value: "152ms", color: "text-blue-600" },
+    { label: "Uptime", value: "99.9%", color: "text-green-600" },
+  ];
 
-        {/* Platform Stats - Screenshot Match */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {systemStats.map((stat, index) => (
-            <div key={index} className="group bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-purple-100/50 hover:border-purple-200/70 transition-all duration-300">
-              <div className="flex items-start gap-4 mb-6">
-                <div className={`w-20 h-20 bg-gradient-to-br from-${stat.color}-500 via-${stat.color}-600 to-${stat.color}-700 rounded-3xl flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-purple-200/50`}>
-                  <span className="text-3xl font-bold">{stat.icon}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-slate-600 text-sm font-medium mb-1 truncate">{stat.label}</p>
-                  <p className="text-4xl lg:text-3xl font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent leading-tight">
-                    {stat.value}
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs text-emerald-600 font-semibold bg-emerald-100/50 px-3 py-1 rounded-full inline-flex items-center gap-1 w-fit">
-                {stat.subtitle}
+  const tabs = [
+    "Overview",
+    "User Management",
+    "Event Management",
+    "Registrations",
+    "Admin Logs",
+  ];
+  const [activeTab, setActiveTab] = useState("Overview");
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-start justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-black text-slate-800">
+                Admin Dashboard
+              </h1>
+              <p className="text-slate-500 mt-1">
+                Manage platform activities and monitor performance
               </p>
             </div>
-          ))}
-        </div>
-
-        {/* Main Content Grid - Screenshot Match */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Section - Platform Activity + Overview */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Platform Activity */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-purple-100/50">
-              <h3 className="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                📊 Platform Activity
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-100 hover:shadow-lg transition-all">
-                  <div className="text-5xl mb-6">📈</div>
-                  <div className="text-4xl font-black text-purple-700 mb-3">78%</div>
-                  <p className="text-xl text-slate-600 font-semibold">Live Events</p>
-                  <p className="text-sm text-slate-500 mt-2">1247 events running</p>
-                </div>
-                <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-100 hover:shadow-lg transition-all">
-                  <div className="text-5xl mb-6">⚡</div>
-                  <div className="text-4xl font-black text-emerald-700 mb-3">94%</div>
-                  <p className="text-xl text-slate-600 font-semibold">Engagement Rate</p>
-                  <p className="text-sm text-slate-500 mt-2">24.5K active users</p>
-                </div>
-              </div>
-            </div>
-
-            {/* College Overview */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-purple-100/50">
-              <h3 className="text-3xl font-bold text-slate-900 mb-6">🏫 College Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-100 hover:shadow-lg transition-all">
-                  <div className="text-4xl mb-4">🏫</div>
-                  <div className="text-3xl font-black text-indigo-700">47</div>
-                  <p className="text-slate-600 font-semibold">Active Colleges</p>
-                </div>
-                <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-100 hover:shadow-lg transition-all">
-                  <div className="text-4xl mb-4">📈</div>
-                  <div className="text-3xl font-black text-emerald-700">+23%</div>
-                  <p className="text-slate-600 font-semibold">Monthly Growth</p>
-                </div>
-                <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100 hover:shadow-lg transition-all">
-                  <div className="text-4xl mb-4">⭐</div>
-                  <div className="text-3xl font-black text-amber-700">4.8</div>
-                  <p className="text-slate-600 font-semibold">Avg Rating</p>
-                </div>
-              </div>
+            <div className="flex gap-3">
+              <button className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold hover:bg-white transition">
+                Filter
+              </button>
+              <Link
+                to="/super-admin/pending-events"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition"
+              >
+                <FaShieldAlt /> Security
+              </Link>
             </div>
           </div>
 
-          {/* Right Section - Quick Actions */}
-          <div className="space-y-6">
-            <Link to="/super-admin/colleges" className="block bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-10 rounded-3xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all text-center font-bold text-2xl group">
-              <span className="block mb-3 text-4xl">🏫</span>
-              <span>All Colleges</span>
-              <span className="text-sm block mt-2 text-indigo-100 opacity-90 group-hover:opacity-100">View & Manage</span>
-            </Link>
-            
-            <Link to="/super-admin/reports" className="block bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-10 rounded-3xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all text-center font-bold text-2xl group">
-              <span className="block mb-3 text-4xl">📊</span>
-              <span>Analytics</span>
-              <span className="text-sm block mt-2 text-emerald-100 opacity-90 group-hover:opacity-100">Reports & Charts</span>
-            </Link>
-            
-            <Link to="/super-admin/pending-colleges" className="block bg-gradient-to-r from-orange-500 to-red-600 text-white p-10 rounded-3xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all text-center font-bold text-2xl relative group">
-              <span className="block mb-3 text-4xl">⏳</span>
-              <span>Pending Colleges</span>
-              <span className="absolute -top-3 -right-3 bg-red-500 text-white px-4 py-2 rounded-2xl text-lg font-bold shadow-lg">5</span>
-              <span className="text-sm block mt-2 text-orange-100 opacity-90 group-hover:opacity-100">Review Requests</span>
-            </Link>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {stats.map((s, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100"
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white text-lg mb-3`}
+                >
+                  {s.icon}
+                </div>
+                <p className="text-2xl font-black text-slate-800">{s.value}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-slate-500 font-medium">
+                    {s.label}
+                  </p>
+                  <span
+                    className={`text-xs font-semibold ${s.change.startsWith("+") ? "text-green-600" : "text-red-500"}`}
+                  >
+                    {s.change}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
 
-        {/* Bottom Quick Actions - Screenshot Match */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-12 pt-12 border-t-2 border-purple-100/50">
-          <div className="p-8 rounded-2xl bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border-2 border-purple-200/50 text-center hover:shadow-xl transition-all cursor-pointer group">
-            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">⚙️</div>
-            <div className="font-bold text-xl mb-2 text-purple-800">Manage Users</div>
-            <p className="text-sm text-slate-600">Admin logins</p>
+          <div className="flex gap-1 mb-6 bg-white rounded-xl p-1 shadow-sm border border-slate-100 w-fit">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === tab ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:bg-slate-100"}`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
-          <div className="p-8 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-2 border-emerald-200/50 text-center hover:shadow-xl transition-all cursor-pointer group">
-            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">💰</div>
-            <div className="font-bold text-xl mb-2 text-emerald-800">View Events</div>
-            <p className="text-sm text-slate-600">All events list</p>
-          </div>
-          <div className="p-8 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-2 border-amber-200/50 text-center hover:shadow-xl transition-all cursor-pointer group">
-            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">⭐</div>
-            <div className="font-bold text-xl mb-2 text-amber-800">User Logs</div>
-            <p className="text-sm text-slate-600">Activity logs</p>
-          </div>
-          <div className="p-8 rounded-2xl bg-gradient-to-r from-slate-500/10 to-slate-400/10 border-2 border-slate-200/50 text-center hover:shadow-xl transition-all cursor-pointer group">
-            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">⚡</div>
-            <div className="font-bold text-xl mb-2 text-slate-800">Settings</div>
-            <p className="text-sm text-slate-600">Platform config</p>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+              <h2 className="text-lg font-black text-slate-800 mb-4">
+                Recent Events
+              </h2>
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="h-12 bg-slate-100 rounded-lg animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : events.length === 0 ? (
+                <p className="text-slate-400 text-sm">No events yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {events.slice(0, 5).map((e) => (
+                    <div
+                      key={e._id}
+                      className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                          <FaCalendarAlt className="text-indigo-600 text-sm" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800 text-sm">
+                            {e.title}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {e.current_participants || 0} participants
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize
+                        ${e.category === "hackathon" ? "bg-blue-100 text-blue-700" : e.category === "cultural" ? "bg-pink-100 text-pink-700" : "bg-purple-100 text-purple-700"}`}
+                      >
+                        {e.category}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+              <h2 className="text-lg font-black text-slate-800 mb-4">
+                System Health
+              </h2>
+              <div className="space-y-4">
+                {systemHealth.map((h, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0"
+                  >
+                    <div className="flex items-center gap-2 text-slate-600 text-sm">
+                      {i === 0 && <FaServer className="text-slate-400" />}
+                      {i === 1 && <FaDatabase className="text-slate-400" />}
+                      {i === 2 && <FaBolt className="text-slate-400" />}
+                      {i === 3 && <FaCheckCircle className="text-slate-400" />}
+                      {h.label}
+                    </div>
+                    <span className={`font-bold text-sm ${h.color}`}>
+                      {h.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <Link
+                  to="/super-admin/pending-events"
+                  className="flex items-center gap-2 p-3 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-semibold hover:bg-indigo-100 transition"
+                >
+                  Pending Events
+                </Link>
+                <Link
+                  to="/super-admin/pending-colleges"
+                  className="flex items-center gap-2 p-3 bg-purple-50 text-purple-700 rounded-xl text-sm font-semibold hover:bg-purple-100 transition"
+                >
+                  Pending Colleges
+                </Link>
+                <Link
+                  to="/super-admin/colleges"
+                  className="flex items-center gap-2 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition"
+                >
+                  All Colleges
+                </Link>
+                <Link
+                  to="/super-admin/reports"
+                  className="flex items-center gap-2 p-3 bg-orange-50 text-orange-700 rounded-xl text-sm font-semibold hover:bg-orange-100 transition"
+                >
+                  Analytics
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
