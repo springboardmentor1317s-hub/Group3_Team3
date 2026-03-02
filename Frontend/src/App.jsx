@@ -13,7 +13,10 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
+<<<<<<< HEAD
 import StudentEvents from "./pages/studentevents/StudentEvents";
+=======
+>>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
 
 // Super Admin imports
 import PendingColleges from "./pages/superadmin/PendingColleges";
@@ -53,6 +56,7 @@ function App() {
         {/* Super Admin Routes */}
         <Route
           path="/super-admin/dashboard"
+<<<<<<< HEAD
           element={
             <ProtectedRoute role="super_admin">
               <SuperAdminDashboard />
@@ -83,6 +87,13 @@ function App() {
             </ProtectedRoute>
           }
         />
+=======
+          element={<SuperAdminDashboard />}
+        />
+        <Route path="/super-admin/profile" element={<SuperAdminProfile />} />
+        <Route path="/super-admin/colleges" element={<AllColleges />} />
+        <Route path="/super-admin/colleges/:id" element={<CollegeDetails />} />
+>>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
         <Route
           path="/super-admin/pending-colleges"
           element={
@@ -109,6 +120,7 @@ function App() {
         />
 
         {/* College Admin Routes */}
+<<<<<<< HEAD
         <Route
           path="/admin/dashboard"
           element={
@@ -125,6 +137,11 @@ function App() {
             </ProtectedRoute>
           }
         />
+=======
+        <Route path="/admin/profile" element={<AdminProfile />} />
+
+        {/* Specific College Admin Routes FIRST */}
+>>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
         <Route
           path="/admin/dashboard/create-event"
           element={

@@ -136,13 +136,21 @@ function EventCard({ event, onDelete }) {
         {/* Actions */}
         <div className="flex gap-2 pt-3 border-t border-slate-100">
           <Link
+<<<<<<< HEAD
             to={`/events/${event._id}`}
+=======
+            to={`/admin/dashboard/events/${event._id}`}
+>>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
             className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition"
           >
             View Details →
           </Link>
           <Link
+<<<<<<< HEAD
             to={`/events/${event._id}`}
+=======
+            to={`/admin/dashboard/events/${event._id}`}
+>>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
             className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition"
             title="Edit"
           >
@@ -322,4 +330,8 @@ function CollegeEvents() {
   );
 }
 
+<<<<<<< HEAD
 export default CollegeEvents;
+=======
+export default CollegeEvents;
+>>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
