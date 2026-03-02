@@ -1,171 +1,198 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import Navbar from "../.././components/Navbar"
+import Navbar from "../../components/Navbar";
+import api from "../../services/api";
+import { getUser } from "../../services/auth";
+import {
+  FaCalendarAlt,
+  FaCheckCircle,
+  FaClock,
+  FaTrophy,
+  FaSearch,
+  FaArrowRight,
+} from "react-icons/fa";
 
 function StudentDashboard() {
-  // Static data for UI (backend will replace these)
+  const user = getUser();
+  const [registeredEvents, setRegisteredEvents] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get("/events");
+        const all = res.data.events || [];
+        const now = new Date();
+        setUpcomingEvents(
+          all.filter((e) => new Date(e.start_date) >= now).slice(0, 6),
+        );
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const stats = [
-    { label: "Registered Events", value: "8", subtitle: "3 upcoming, 5 completed", icon: "🎫", color: "emerald" },
-    { label: "Avg Rating", value: "4.7", subtitle: "Based on 23 reviews", icon: "⭐", color: "blue" },
-    { label: "Upcoming", value: "3", subtitle: "Events this week", icon: "⏰", color: "orange" },
-    { label: "Certificates", value: "12", subtitle: "Events completed", icon: "🏆", color: "purple" }
-  ];
-
-  const recentEvents = [
-    { title: "Inter-College Hackathon 2026", college: "SRM Institute", date: "Feb 20-22", status: "Upcoming", participants: "127/200" },
-    { title: "Cultural Fest - Rhythm 2026", college: "VIT Vellore", date: "Mar 5", status: "Approved", participants: "89/150" },
-    { title: "Sports Championship", college: "Anna University", date: "Feb 15", status: "Completed", participants: "245" }
+    {
+      label: "Registered Events",
+      value: registeredEvents.length,
+      icon: <FaCalendarAlt />,
+      color: "from-indigo-500 to-purple-600",
+    },
+    {
+      label: "Upcoming Events",
+      value: upcomingEvents.length,
+      icon: <FaClock />,
+      color: "from-emerald-500 to-teal-600",
+    },
+    {
+      label: "Completed",
+      value: 0,
+      icon: <FaCheckCircle />,
+      color: "from-orange-400 to-pink-500",
+    },
+    {
+      label: "Certificates",
+      value: 0,
+      icon: <FaTrophy />,
+      color: "from-yellow-400 to-orange-500",
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-indigo-50">
-      {/* Navbar */}
-      
+    <>
       <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-black text-slate-800">
+              Welcome back, {user?.fullName || user?.name || "Student"}! 👋
+            </h1>
+            <p className="text-slate-500 mt-1">{user?.college} · Student</p>
+          </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Stats Cards - Backend will update numbers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-100/50 group hover:-translate-y-1">
-              <div className="flex items-start justify-between mb-6">
-                <div className={`w-14 h-14 bg-${stat.color}-100 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                  <span className={`text-${stat.color}-600 text-2xl font-bold`}>{stat.icon}</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {stats.map((s, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100"
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white text-lg mb-3`}
+                >
+                  {s.icon}
                 </div>
-                <div className="text-right">
-                  <p className="text-slate-600 text-sm font-medium opacity-80">{stat.label}</p>
-                  <p className="text-4xl font-black text-slate-900 mt-1">{stat.value}</p>
-                </div>
+                <p className="text-2xl font-black text-slate-800">{s.value}</p>
+                <p className="text-xs text-slate-500 font-medium mt-1">
+                  {s.label}
+                </p>
               </div>
-              <p className="text-sm text-slate-500 leading-relaxed">{stat.subtitle}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Quick Actions */}
-            {/* Quick Actions */}
-<div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100/50">
-  <h3 className="text-2xl font-bold text-slate-900 mb-8">Quick Actions</h3>
-  <div className="space-y-4">
-    {/* Browse Events */}
-    <Link to="/events" className="group block p-6 rounded-2xl bg-linear-to-r from-indigo-50 to-purple-50 border-2 border-indigo-100 hover:border-indigo-200 hover:shadow-xl transition-all duration-300">
-      <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">🏃</span>
-        <span className="font-bold text-indigo-700 group-hover:text-indigo-800">Browse All Events</span>
-      </div>
-      <p className="text-sm text-indigo-600">Discover new events</p>
-    </Link>
-    
-    {/* My Registrations */}
-    <Link to="/registered" className="group block p-6 rounded-2xl bg-linear-to-r from-emerald-50 to-teal-50 border-2 border-emerald-100 hover:border-emerald-200 hover:shadow-xl transition-all duration-300">
-      <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">📋</span>
-        <span className="font-bold text-emerald-700 group-hover:text-emerald-800">My Registrations</span>
-      </div>
-      <p className="text-sm text-emerald-600">Track your events</p>
-    </Link>
-    
-    {/* NEW: Completed & Missed Events (replaces Certificates) */}
-    <Link to="/completed-events" className="group block p-6 rounded-2xl bg-linear-to-r from-emerald-50 to-green-50 border-2 border-emerald-100 hover:border-emerald-200 hover:shadow-xl transition-all duration-300">
-      <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">✅</span>
-        <span className="font-bold text-emerald-700 group-hover:text-emerald-800">Completed Events</span>
-      </div>
-      <p className="text-sm text-emerald-600">View history & ratings</p>
-    </Link>
-  </div>
-</div>
-
-
-            {/* Next Event - Backend will populate */}
-            <div className="bg-linear-to-br from-purple-500 to-purple-600 text-white rounded-3xl p-8 shadow-2xl border-0">
-              <h4 className="font-bold text-xl mb-4">Next Event</h4>
-              <div className="space-y-2 mb-6">
-                <h5 className="font-bold text-lg">Sports Fest 2026</h5>
-                <p className="opacity-90 text-sm">Feb 15, 2026</p>
-                <p className="opacity-80 text-xs">SRM Campus, Chennai</p>
-              </div>
-              <Link to="/event-details" className="w-full block bg-white/20 backdrop-blur-sm rounded-2xl py-3 px-6 text-center font-semibold hover:bg-white/30 transition-all duration-300">
-                View Details →
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
+              <h3 className="text-lg font-bold mb-2">Browse Events</h3>
+              <p className="text-indigo-100 text-sm mb-4">
+                Discover hackathons, cultural fests, sports & more from colleges
+                near you.
+              </p>
+              <Link
+                to="/student/events"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-white text-indigo-600 font-bold rounded-xl text-sm hover:shadow-lg transition-all"
+              >
+                Explore Events <FaArrowRight />
               </Link>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white">
+              <h3 className="text-lg font-bold mb-2">My Registrations</h3>
+              <p className="text-emerald-100 text-sm mb-4">
+                View and manage all your event registrations in one place.
+              </p>
+              <button className="inline-flex items-center gap-2 px-5 py-2 bg-white text-emerald-600 font-bold rounded-xl text-sm hover:shadow-lg transition-all">
+                View Registrations <FaArrowRight />
+              </button>
             </div>
           </div>
 
-          {/* Recent Events */}
-          <div className="lg:col-span-3">
-            <div className="flex items-center justify-between mb-10">
-              <h3 className="text-3xl font-black text-slate-900">Recent Events</h3>
-              <Link to="/events" className="bg-linear-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:brightness-105 transition-all text-sm">
-                View All Events →
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-black text-slate-800">
+                Upcoming Events
+              </h2>
+              <Link
+                to="/student/events"
+                className="text-indigo-600 font-semibold text-sm hover:underline flex items-center gap-1"
+              >
+                See all <FaArrowRight />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {recentEvents.map((event, index) => (
-                <EventCard key={index} event={event} />
-              ))}
-            </div>
+            {loading ? (
+              <div className="grid md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-32 bg-slate-100 rounded-xl animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : upcomingEvents.length === 0 ? (
+              <div className="text-center py-12 text-slate-400">
+                <FaSearch className="text-4xl mx-auto mb-3" />
+                <p>No upcoming events found. Check back soon!</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-3 gap-4">
+                {upcomingEvents.map((event) => (
+                  <div
+                    key={event._id}
+                    className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all"
+                  >
+                    <span
+                      className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold mb-2
+                      ${
+                        event.category === "hackathon"
+                          ? "bg-blue-100 text-blue-700"
+                          : event.category === "cultural"
+                            ? "bg-pink-100 text-pink-700"
+                            : event.category === "sports"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-purple-100 text-purple-700"
+                      }`}
+                    >
+                      {event.category}
+                    </span>
+                    <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1">
+                      {event.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 mb-3">
+                      {new Date(event.start_date).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                      {" · "}
+                      {event.location}
+                    </p>
+                    <Link
+                      to="/student/events"
+                      className="text-xs text-indigo-600 font-semibold hover:underline"
+                    >
+                      View Details →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function EventCard({ event }) {
-  const getStatusStyle = (status) => {
-    switch(status) {
-      case "Upcoming": return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "Approved": return "bg-blue-100 text-blue-800 border-blue-200"; 
-      case "Completed": return "bg-slate-100 text-slate-800 border-slate-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  return (
-    <div className="group bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 overflow-hidden border border-slate-100 hover:border-purple-200">
-      {/* Status Badge */}
-      <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold border-2 mb-6 ${getStatusStyle(event.status)}`}>
-        {event.status}
-      </div>
-      
-      <h4 className="font-black text-xl text-slate-900 mb-4 leading-tight group-hover:text-purple-700 transition-colors">
-        {event.title}
-      </h4>
-      
-      <div className="space-y-3 mb-6">
-        <div className="flex items-center gap-3 text-slate-600">
-          <span className="text-lg">🏫</span>
-          <span className="font-semibold">{event.college}</span>
-        </div>
-        <div className="flex items-center gap-3 text-slate-600">
-          <span className="text-lg">📅</span>
-          <span className="font-semibold">{event.date}</span>
-        </div>
-      </div>
-      
-      {/* Progress Bar */}
-      <div className="w-full bg-slate-100 rounded-full h-3 mb-6 overflow-hidden">
-        <div className="bg-linear-to-r from-purple-500 to-purple-600 h-3 rounded-full shadow-inner" style={{width: '75%'}}></div>
-      </div>
-      
-      <p className="text-lg font-bold text-slate-900 mb-6">{event.participants}</p>
-      
-      <div className="flex gap-3">
-        <Link 
-          to="/event-details" 
-          className="flex-1 bg-linear-to-r from-purple-500 to-purple-600 text-white font-bold py-3 px-6 rounded-2xl text-center shadow-lg hover:shadow-xl hover:brightness-105 transition-all duration-300"
-        >
-          View Details
-        </Link>
-        <button className="px-6 py-3 font-semibold text-slate-700 border-2 border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-md">
-          Rate
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 

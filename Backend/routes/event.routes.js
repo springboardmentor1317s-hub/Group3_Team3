@@ -1,43 +1,29 @@
 import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { createEvent, getEvents } from '../controllers/eventController.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// ✅ Multer config — saves images to Backend/uploads/ folder
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads'));
-  },
-  filename: (req, file, cb) => {
-    // Unique filename: timestamp + original name
-    const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '_');
-    cb(null, uniqueName);
-  }
-});
-
-const fileFilter = (req, file, cb) => {
-  // Only allow image files
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'), false);
-  }
-};
-
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
-});
+import {
+  createEvent,
+  getEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+} from '../controllers/eventController.js';
+import { protect, authorize } from '../middleware/auth.middleware.js';
+import { handleUpload } from '../middleware/upload.middleware.js';
 
 const router = express.Router();
 
-// ✅ upload.single('image_url') handles the image file upload
-router.post('/create', upload.single('image_url'), createEvent);
+// GET all events (public)
 router.get('/', getEvents);
+
+// GET single event by ID (public)
+router.get('/:id', getEventById);
+
+// POST create event — handles multipart/form-data with optional image
+router.post('/create', protect, authorize('college_admin', 'super_admin'), handleUpload, createEvent);
+
+// PUT update event — handles multipart/form-data with optional image
+router.put('/:id', protect, authorize('college_admin', 'super_admin'), handleUpload, updateEvent);
+
+// DELETE event
+router.delete('/:id', protect, authorize('college_admin', 'super_admin'), deleteEvent);
 
 export default router;

@@ -30,7 +30,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/auth/signin", {
+      const res = await api.post("/auth/login", {
         email: formData.email,
         password: formData.password,
       });
@@ -41,7 +41,10 @@ function Login() {
       setToken(token);
       localStorage.setItem("token", token);
       localStorage.setItem("role", user.role);
-      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ ...user, fullName: user.name }),
+      );
 
       toast.success("Login successful!");
 
@@ -84,7 +87,6 @@ function Login() {
       <div className="min-h-screen bg-linear-to-br from-indigo-500 to-purple-700 flex items-center justify-center p-5">
         <div className="w-full max-w-112.5">
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-            {/* Header */}
             <div className="bg-linear-to-br from-indigo-500 to-purple-700 px-8 py-10 text-center text-white">
               <div className="w-17.5 h-17.5 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
                 <FaUserShield />
@@ -95,10 +97,8 @@ function Login() {
               </p>
             </div>
 
-            {/* Form */}
             <div className="p-8">
               <form onSubmit={handleLogin} className="space-y-5">
-                {/* Email */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Email Address
@@ -117,7 +117,6 @@ function Login() {
                   </div>
                 </div>
 
-                {/* Password */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Password
@@ -142,7 +141,6 @@ function Login() {
                   </div>
                 </div>
 
-                {/* Account Type */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Account Type
@@ -165,7 +163,6 @@ function Login() {
                   </div>
                 </div>
 
-                {/* Forgot Password */}
                 <div className="text-right -mt-2">
                   <Link
                     to="/forgot-password"
@@ -175,7 +172,6 @@ function Login() {
                   </Link>
                 </div>
 
-                {/* Submit */}
                 <button
                   type="submit"
                   className="w-full py-3.5 text-base font-bold text-white bg-linear-to-br from-indigo-500 to-purple-700 border-none rounded-xl cursor-pointer transition-all duration-300 shadow-lg shadow-indigo-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-400 mt-2"

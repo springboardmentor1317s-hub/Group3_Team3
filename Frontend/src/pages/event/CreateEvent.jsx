@@ -1,549 +1,511 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ ADDED
+import { useState, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Navbar from "../../components/Navbar";
 import api from "../../services/api";
+import { toast } from "react-toastify";
+import {
+  FaArrowLeft,
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaTag,
+  FaUsers,
+  FaSave,
+  FaImage,
+  FaTimes,
+} from "react-icons/fa";
+
+const CATEGORIES = [
+  "sports",
+  "hackathon",
+  "cultural",
+  "workshop",
+  "seminar",
+  "social",
+  "technical",
+  "other",
+];
+const EVENT_TYPES = ["offline", "online", "hybrid"];
+const CATEGORY_EMOJI = {
+  hackathon: "💻",
+  cultural: "🎭",
+  sports: "🏆",
+  workshop: "🔧",
+  seminar: "🎓",
+  social: "🎉",
+  technical: "⚙️",
+  other: "📅",
+};
 
 function CreateEvent() {
-  const navigate = useNavigate(); // ✅ ADDED
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
-  const [formData, setFormData] = useState({
-    // Basic Info
+  const [form, setForm] = useState({
     title: "",
     description: "",
-    category: "",
-    college_id: "",
-    organizer: "",
+    category: "other",
+    event_type: "offline",
     location: "",
     venue: "",
-
-    // Dates
     start_date: "",
     end_date: "",
-    registration_start: "",
     registration_end: "",
-
-    // Registration
-    max_participants: "",
-    registration_fee: "",
-    event_type: "",
-    status: "draft",
-
-    // Media & Features
-    image_url: null,
-    tags: "",
+    max_participants: 100,
+    registration_fee: 0,
+    eligibility: "Open to all college students",
     requirements: "",
-    is_featured: false,
-
-    // Nested Objects
-    prizes: [{ position: "", prize: "", amount: "" }],
-    schedule: [{ time: "", activity: "", description: "" }],
-    contact: { email: "", phone: "", website: "" },
-    social_links: { facebook: "", instagram: "", twitter: "", linkedin: "" },
-
-    // Advanced
-    rules_and_regulations: "",
-    eligibility: "",
+    tags: "",
+    status: "published",
     certificates: false,
-    certificate_template: "",
+    is_featured: false,
+    rules_and_regulations: "",
   });
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
-    if (type === "file") {
-      setFormData({ ...formData, [name]: files[0] });
-    } else if (type === "checkbox") {
-      setFormData({ ...formData, [name]: checked });
-    } else {
-      setFormData({ ...formData, [name]: value });
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
     }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
-  const handleNestedChange = (section, index, field, value) => {
-    const newSection = formData[section].map((item, i) =>
-      i === index ? { ...item, [field]: value } : item,
-    );
-    setFormData({ ...formData, [section]: newSection });
-  };
-
-  const addNestedItem = (section) => {
-    const emptyItem =
-      section === "prizes"
-        ? { position: "", prize: "", amount: "" }
-        : { time: "", activity: "", description: "" };
-    setFormData({ ...formData, [section]: [...formData[section], emptyItem] });
-  };
-
-  const removeNestedItem = (section, index) => {
-    setFormData({
-      ...formData,
-      [section]: formData[section].filter((_, i) => i !== index),
-    });
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validation
-    if (!formData.title?.trim()) {
-      alert("❌ Event title is required");
-      return;
-    }
-    if (!formData.description?.trim()) {
-      alert("❌ Event description is required");
-      return;
-    }
-    if (!formData.location?.trim()) {
-      alert("❌ Event location is required");
-      return;
-    }
-    if (!formData.organizer?.trim()) {
-      alert("❌ Organizer name is required");
-      return;
-    }
-    if (!formData.start_date) {
-      alert("❌ Start date is required");
-      return;
-    }
-    if (!formData.end_date) {
-      alert("❌ End date is required");
-      return;
-    }
-    if (!formData.registration_end) {
-      alert("❌ Registration deadline is required");
-      return;
-    }
-    if (!formData.category) {
-      alert("❌ Event category is required");
-      return;
-    }
-
-    const eventData = {
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      location: formData.location,
-      venue: formData.venue || "",
-      organizer: formData.organizer,
-      start_date: formData.start_date,
-      end_date: formData.end_date,
-      registration_start: formData.registration_start || new Date(),
-      registration_end: formData.registration_end,
-      max_participants: formData.max_participants || 100,
-      registration_fee: formData.registration_fee || 0,
-      event_type: formData.event_type || "offline",
-      status: formData.status || "draft",
-      tags: formData.tags || "",
-      requirements: formData.requirements || "",
-      is_featured: formData.is_featured || false,
-      prizes: formData.prizes || [],
-      schedule: formData.schedule || [],
-      contact: formData.contact || {},
-      social_links: formData.social_links || {},
-      rules_and_regulations: formData.rules_and_regulations || "",
-      eligibility: formData.eligibility || "",
-      certificates: formData.certificates || false,
-      certificate_template: formData.certificate_template || "",
-    };
-
+    setLoading(true);
     try {
-      const result = await api.post("/events/create", eventData);
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (key === "tags") {
+          const arr = value
+            ? value
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean)
+            : [];
+          arr.forEach((tag) => formData.append("tags[]", tag));
+        } else {
+          formData.append(key, value);
+        }
+      });
+      if (imageFile) formData.append("image", imageFile);
 
-      if (result.status === 200 || result.status === 201) {
-        alert("✅ Event Created Successfully!");
-        // ✅ ADDED: Redirect to dashboard after success
-        navigate("/admin/dashboard");
-      } else {
-        alert("❌ " + (result.data?.message || "Failed to create event"));
-      }
-    } catch (error) {
-      alert(
-        "❌ " +
-          (error.response?.data?.message || error.message || "Server error!"),
-      );
+      await api.post("/events/create", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Event created successfully! 🎉");
+      navigate("/admin/dashboard/events");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create event");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const inputClass =
+    "w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 p-6">
-      <form onSubmit={handleSubmit}>
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-5xl font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 bg-clip-text text-transparent mb-16 text-center drop-shadow-2xl">
-            Create Campus Event
-          </h1>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <Link
+              to="/admin/dashboard"
+              className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition"
+            >
+              <FaArrowLeft className="text-slate-600" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800">
+                Create New Event
+              </h1>
+              <p className="text-slate-500 text-sm mt-0.5">
+                Fill in the details to publish your event
+              </p>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* LEFT: Basic + Registration */}
-            <div className="bg-white/10 backdrop-blur-3xl shadow-2xl rounded-3xl p-10 border border-white/20 hover:shadow-3xl hover:-translate-y-2 transition-all duration-500">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-10 border-b-4 border-purple-200 pb-6">
-                📋 Basic Information
-              </h2>
-
-              {/* Title */}
-              <div className="mb-8">
-                <label className="block text-lg font-bold text-gray-700 mb-4 tracking-wide">
-                  Event Title *
-                </label>
-                <input
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className="w-full px-8 py-6 text-xl bg-white/80 border-2 border-gray-200/50 rounded-3xl 
-                            focus:ring-4 focus:ring-purple-400/60 focus:border-purple-400 shadow-xl 
-                            hover:shadow-2xl hover:border-purple-300/70 transition-all duration-500 
-                            placeholder:text-gray-400 placeholder:italic"
-                  placeholder="Enter captivating event title..."
-                  required
-                />
-              </div>
-
-              {/* Description */}
-              <div className="mb-10">
-                <label className="block text-lg font-bold text-gray-700 mb-4 tracking-wide">
-                  Description *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="5"
-                  className="w-full px-8 py-6 text-lg bg-white/80 border-2 border-gray-200/50 rounded-3xl 
-                            focus:ring-4 focus:ring-purple-400/60 focus:border-purple-400 shadow-xl 
-                            hover:shadow-2xl hover:border-purple-300/70 transition-all duration-500 
-                            resize-vertical placeholder:text-gray-400"
-                  placeholder="Share the excitement of your event..."
-                  required
-                />
-              </div>
-
-              {/* Category + College ID */}
-              <div className="grid grid-cols-2 gap-8 mb-10">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-4">
-                    Category *
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-6 py-5 bg-white/80 border-2 border-gray-200/50 rounded-2xl 
-                              focus:ring-4 focus:ring-emerald-400/60 focus:border-emerald-400 shadow-xl 
-                              hover:shadow-2xl hover:border-emerald-300/70 transition-all duration-500"
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-6">
+              {/* IMAGE UPLOAD */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <FaImage className="text-indigo-500" /> Event Banner Image
+                </h2>
+                {imagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-56 object-cover rounded-xl border-2 border-indigo-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-3 right-3 w-9 h-9 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition shadow-lg"
+                    >
+                      <FaTimes />
+                    </button>
+                    <p className="mt-2 text-xs text-slate-500 flex items-center gap-1">
+                      <FaImage className="text-indigo-400" />
+                      {imageFile?.name} ({(imageFile?.size / 1024).toFixed(0)}{" "}
+                      KB)
+                    </p>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-48 border-2 border-dashed border-indigo-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
                   >
-                    <option value="">✨ Select Category</option>
-                    <option value="cultural">🎭 Cultural</option>
-                    <option value="technical">💻 Technical</option>
-                    <option value="sports">⚽ Sports</option>
-                    <option value="workshop">📚 Workshop</option>
-                    <option value="hackathon">💡 Hackathon</option>
-                    <option value="seminar">🎤 Seminar</option>
-                    <option value="other">🌟 Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-4">
-                    College ID
-                  </label>
-                  <input
-                    name="college_id"
-                    value={formData.college_id}
-                    onChange={handleInputChange}
-                    className="w-full px-6 py-5 bg-white/80 border-2 border-gray-200/50 rounded-2xl 
-                              focus:ring-4 focus:ring-blue-400/60 focus:border-blue-400 shadow-xl 
-                              hover:shadow-2xl hover:border-blue-300/70 transition-all duration-500"
-                  />
-                </div>
-              </div>
-
-              {/* Location + Venue */}
-              <div className="grid grid-cols-2 gap-8 mb-10">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-4">
-                    Location *
-                  </label>
-                  <input
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-6 py-5 bg-white/80 border-2 border-gray-200/50 rounded-2xl 
-                              focus:ring-4 focus:ring-indigo-400/60 shadow-xl hover:shadow-2xl transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-4">
-                    Venue *
-                  </label>
-                  <input
-                    name="venue"
-                    value={formData.venue}
-                    onChange={handleInputChange}
-                    className="w-full px-6 py-5 bg-white/80 border-2 border-gray-200/50 rounded-2xl 
-                              focus:ring-4 focus:ring-orange-400/60 focus:border-orange-400 shadow-xl 
-                              hover:shadow-2xl hover:border-orange-300/70 transition-all duration-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="mb-10">
-                <label className="block text-sm font-bold text-gray-700 mb-4">
-                  Organizer *
-                </label>
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-500 text-2xl mb-3 group-hover:bg-indigo-200 transition">
+                      <FaImage />
+                    </div>
+                    <p className="font-semibold text-slate-700">
+                      Click to upload event banner
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      JPG, PNG, WebP or GIF · Max 5MB
+                    </p>
+                    <p className="text-xs text-indigo-500 mt-2 font-medium">
+                      Recommended: 1200 × 500 px
+                    </p>
+                  </div>
+                )}
                 <input
-                  name="organizer"
-                  value={formData.organizer}
-                  onChange={handleInputChange}
-                  className="w-full px-6 py-5 bg-white/80 border-2 border-gray-200/50 rounded-2xl 
-                            focus:ring-4 focus:ring-teal-400/60 focus:border-teal-400 shadow-xl 
-                            hover:shadow-2xl transition-all duration-500"
-                  required
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
                 />
               </div>
 
-              {/* Dates & Registration */}
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-10 rounded-3xl border-4 border-emerald-200/50 mb-10">
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent mb-8">
-                  📅 Dates & Registration
-                </h3>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block font-bold text-gray-700 mb-3">
-                      Start Date *
-                    </label>
+              {/* BASIC INFO */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <FaCalendarAlt className="text-indigo-500" /> Basic
+                  Information
+                </h2>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Event Title *</label>
                     <input
-                      type="date"
-                      name="start_date"
-                      value={formData.start_date}
-                      onChange={handleInputChange}
+                      name="title"
+                      value={form.title}
+                      onChange={handleChange}
                       required
-                      className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      placeholder="e.g. Inter-College Hackathon 2025"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Description *</label>
+                    <textarea
+                      name="description"
+                      value={form.description}
+                      onChange={handleChange}
+                      required
+                      rows={4}
+                      placeholder="Describe your event..."
+                      className={inputClass + " resize-none"}
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 mb-3">
-                      End Date *
-                    </label>
+                    <label className={labelClass}>Category *</label>
+                    <select
+                      name="category"
+                      value={form.category}
+                      onChange={handleChange}
+                      className={inputClass}
+                    >
+                      {CATEGORIES.map((c) => (
+                        <option key={c} value={c}>
+                          {CATEGORY_EMOJI[c]}{" "}
+                          {c.charAt(0).toUpperCase() + c.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Event Type *</label>
+                    <select
+                      name="event_type"
+                      value={form.event_type}
+                      onChange={handleChange}
+                      className={inputClass}
+                    >
+                      {EVENT_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* LOCATION */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <FaMapMarkerAlt className="text-indigo-500" /> Location
+                </h2>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className={labelClass}>City / Area *</label>
                     <input
-                      type="date"
-                      name="end_date"
-                      value={formData.end_date}
-                      onChange={handleInputChange}
+                      name="location"
+                      value={form.location}
+                      onChange={handleChange}
                       required
-                      className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      placeholder="e.g. Mumbai, Maharashtra"
+                      className={inputClass}
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 mb-3">
-                      Registration Start
-                    </label>
+                    <label className={labelClass}>Venue Name</label>
                     <input
-                      type="date"
-                      name="registration_start"
-                      value={formData.registration_start}
-                      onChange={handleInputChange}
-                      className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl shadow-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-gray-700 mb-3">
-                      Registration End *
-                    </label>
-                    <input
-                      type="date"
-                      name="registration_end"
-                      value={formData.registration_end}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-6 py-5 bg-white/90 border-2 border-emerald-200/50 rounded-2xl shadow-lg"
+                      name="venue"
+                      value={form.venue}
+                      onChange={handleChange}
+                      placeholder="e.g. City Cultural Center"
+                      className={inputClass}
                     />
                   </div>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-2 gap-6 mt-8 pt-8 border-t-2 border-emerald-200">
+              {/* DATES */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <FaCalendarAlt className="text-indigo-500" /> Dates & Schedule
+                </h2>
+                <div className="grid md:grid-cols-3 gap-5">
                   <div>
-                    <label className="block font-bold text-gray-700 mb-3">
-                      Max Participants
+                    <label className={labelClass}>Start Date & Time *</label>
+                    <input
+                      type="datetime-local"
+                      name="start_date"
+                      value={form.start_date}
+                      onChange={handleChange}
+                      required
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>End Date & Time *</label>
+                    <input
+                      type="datetime-local"
+                      name="end_date"
+                      value={form.end_date}
+                      onChange={handleChange}
+                      required
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>
+                      Registration Deadline *
                     </label>
+                    <input
+                      type="datetime-local"
+                      name="registration_end"
+                      value={form.registration_end}
+                      onChange={handleChange}
+                      required
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* PARTICIPANTS */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <FaUsers className="text-indigo-500" /> Participants & Fees
+                </h2>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className={labelClass}>Max Participants</label>
                     <input
                       type="number"
                       name="max_participants"
-                      value={formData.max_participants}
-                      onChange={handleInputChange}
-                      min="1"
-                      className="w-full px-6 py-5 bg-white/90 border-2 border-purple-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                      value={form.max_participants}
+                      onChange={handleChange}
+                      min={1}
+                      className={inputClass}
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 mb-3">
-                      Registration Fee ₹
-                    </label>
+                    <label className={labelClass}>Registration Fee (₹)</label>
                     <input
                       type="number"
                       name="registration_fee"
-                      value={formData.registration_fee}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      className="w-full px-6 py-5 bg-white/90 border-2 border-amber-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                      value={form.registration_fee}
+                      onChange={handleChange}
+                      min={0}
+                      className={inputClass}
+                    />
+                    <p className="text-xs text-slate-400 mt-1">
+                      Set 0 for free events
+                    </p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Eligibility</label>
+                    <input
+                      name="eligibility"
+                      value={form.eligibility}
+                      onChange={handleChange}
+                      placeholder="Who can participate?"
+                      className={inputClass}
                     />
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* RIGHT: Advanced */}
-            <div className="space-y-8">
-              {/* Media Upload */}
-              <div className="bg-white/10 backdrop-blur-3xl shadow-2xl rounded-3xl p-10 border border-white/20 hover:shadow-3xl transition-all">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-8">
-                  🖼️ Media & Features
+              {/* ADDITIONAL */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+                  <FaTag className="text-indigo-500" /> Additional Details
                 </h2>
-                <div className="mb-8">
-                  <label className="block text-lg font-bold text-gray-700 mb-4">
-                    Event Banner Image
-                  </label>
-                  <input
-                    type="file"
-                    name="image_url"
-                    accept="image/*"
-                    onChange={handleInputChange}
-                    className="w-full px-8 py-8 border-4 border-dashed border-purple-300/50 rounded-3xl 
-                              bg-gradient-to-r from-purple-50/80 to-indigo-50/80 hover:from-purple-100 hover:to-indigo-100
-                              backdrop-blur-xl cursor-pointer transition-all duration-500 hover:shadow-2xl
-                              file:mr-6 file:py-4 file:px-8 file:rounded-2xl file:border-0 file:bg-gradient-to-r 
-                              file:from-purple-500 file:to-indigo-500 file:text-white file:font-bold 
-                              file:shadow-xl hover:file:shadow-2xl file:transform file:hover:scale-105"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block font-bold text-gray-700 mb-3">
-                      Tags
-                    </label>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Tags (comma separated)</label>
                     <input
                       name="tags"
-                      value={formData.tags}
-                      onChange={handleInputChange}
-                      className="w-full px-6 py-5 bg-white/80 border-2 border-gray-200/50 rounded-2xl 
-                                focus:ring-4 focus:ring-pink-400/60 shadow-xl hover:shadow-2xl transition-all"
-                      placeholder="tech, hackathon, coding"
+                      value={form.tags}
+                      onChange={handleChange}
+                      placeholder="e.g. coding, innovation, prizes"
+                      className={inputClass}
                     />
                   </div>
-                  <div
-                    className="flex items-center justify-center p-6 bg-gradient-to-r from-emerald-50 to-teal-50 
-                                 rounded-2xl border-2 border-emerald-200/50 hover:border-emerald-400/70"
-                  >
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Requirements</label>
+                    <textarea
+                      name="requirements"
+                      value={form.requirements}
+                      onChange={handleChange}
+                      rows={2}
+                      className={inputClass + " resize-none"}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Rules & Regulations</label>
+                    <textarea
+                      name="rules_and_regulations"
+                      value={form.rules_and_regulations}
+                      onChange={handleChange}
+                      rows={3}
+                      className={inputClass + " resize-none"}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
-                      name="is_featured"
-                      checked={formData.is_featured}
-                      onChange={handleInputChange}
-                      className="w-8 h-8 text-emerald-600 rounded-xl mr-4 focus:ring-emerald-500 border-2 border-emerald-400 shadow-lg transform hover:scale-110"
+                      id="certificates"
+                      name="certificates"
+                      checked={form.certificates}
+                      onChange={handleChange}
+                      className="w-4 h-4 accent-indigo-600"
                     />
-                    <span className="text-xl font-bold text-emerald-800">
-                      ⭐ Featured Event
-                    </span>
+                    <label
+                      htmlFor="certificates"
+                      className="text-sm font-medium text-slate-700 cursor-pointer"
+                    >
+                      Issue Certificates to participants
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="is_featured"
+                      name="is_featured"
+                      checked={form.is_featured}
+                      onChange={handleChange}
+                      className="w-4 h-4 accent-indigo-600"
+                    />
+                    <label
+                      htmlFor="is_featured"
+                      className="text-sm font-medium text-slate-700 cursor-pointer"
+                    >
+                      Feature this event on homepage
+                    </label>
                   </div>
                 </div>
               </div>
 
-              {/* Prizes */}
-              <div className="bg-white/10 backdrop-blur-3xl shadow-2xl rounded-3xl p-8 border border-white/20">
-                <h3
-                  className="text-xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent 
-                              mb-6 flex items-center justify-between"
-                >
-                  🏆 Prizes
-                  <button
-                    type="button"
-                    onClick={() => addNestedItem("prizes")}
-                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold 
-                              rounded-2xl shadow-xl hover:from-green-600 hover:to-emerald-600 
-                              transform hover:-translate-y-1 hover:scale-105 transition-all duration-300"
-                  >
-                    + Add Prize
-                  </button>
-                </h3>
-                {formData.prizes.map((prize, index) => (
-                  <div
-                    key={index}
-                    className="bg-white/60 backdrop-blur-xl p-6 rounded-2xl mb-4 shadow-xl hover:shadow-2xl border border-white/50 transition-all"
-                  >
-                    <div className="grid grid-cols-3 gap-4">
-                      <input
-                        placeholder="1st"
-                        value={prize.position}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "prizes",
-                            index,
-                            "position",
-                            e.target.value,
-                          )
-                        }
-                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
-                      />
-                      <input
-                        placeholder="Trophy"
-                        value={prize.prize}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "prizes",
-                            index,
-                            "prize",
-                            e.target.value,
-                          )
-                        }
-                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
-                      />
-                      <input
-                        type="number"
-                        placeholder="₹5000"
-                        value={prize.amount}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "prizes",
-                            index,
-                            "amount",
-                            e.target.value,
-                          )
-                        }
-                        className="px-4 py-3 border-2 border-gray-200/50 rounded-xl bg-white/80 shadow-md focus:ring-2 focus:ring-yellow-400 hover:shadow-lg transition-all text-sm"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeNestedItem("prizes", index)}
-                      className="mt-4 px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white 
-                                 font-bold rounded-xl hover:from-red-600 hover:to-rose-600 
-                                 transform hover:scale-105 transition-all duration-200 text-sm"
+              {/* STATUS */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <label className={labelClass}>Publish Status</label>
+                <div className="flex gap-4 mt-2">
+                  {["published", "draft"].map((s) => (
+                    <label
+                      key={s}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 cursor-pointer transition-all
+                      ${form.status === s ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-600"}`}
                     >
-                      ❌ Remove
-                    </button>
-                  </div>
-                ))}
+                      <input
+                        type="radio"
+                        name="status"
+                        value={s}
+                        checked={form.status === s}
+                        onChange={handleChange}
+                        className="hidden"
+                      />
+                      <span className="text-sm font-semibold">
+                        {s === "published"
+                          ? "🟢 Publish Now"
+                          : "🟡 Save as Draft"}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="w-full col-span-2 lg:col-span-1 bg-gradient-to-r 
-                        from-purple-600 via-indigo-600 to-pink-600 text-white py-8 px-12 
-                        rounded-3xl text-2xl font-black shadow-2xl hover:shadow-purple-500/50
-                        hover:from-purple-700 hover:via-indigo-700 hover:to-pink-700 
-                        transform hover:-translate-y-3 hover:scale-[1.02] transition-all duration-500
-                        flex items-center justify-center space-x-4 tracking-wide"
-              >
-                <span className="text-3xl">🚀</span>
-                <span>Create Epic Event</span>
-                <span className="text-3xl">✨</span>
-              </button>
+              {/* ACTIONS */}
+              <div className="flex items-center gap-4 justify-end pb-8">
+                <Link
+                  to="/admin/dashboard"
+                  className="px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-60"
+                >
+                  <FaSave />
+                  {loading ? "Creating..." : "Create Event"}
+                </button>
+              </div>
             </div>
-          </div>
+          </form>
         </div>
-      </form>
-    </div>
+      </div>
+    </>
   );
 }
 
