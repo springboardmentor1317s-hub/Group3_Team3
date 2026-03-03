@@ -148,13 +148,9 @@ function SuperAdminDashboard() {
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((i) => (
                     <div
-                 
                       key={i}
-                      
                       className="h-12 bg-slate-100 rounded-lg animate-pulse"
-                    >
-                      
-                    </div>
+                    />
                   ))}
                 </div>
               ) : events.length === 0 ? (
@@ -162,10 +158,7 @@ function SuperAdminDashboard() {
               ) : (
                 <div className="space-y-3">
                   {events.slice(0, 5).map((e) => (
-                       <Link
-              to={`/events/${e._id}`}
-         >
-              <div
+                    <div
                       key={e._id}
                       className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition"
                     >
@@ -189,8 +182,6 @@ function SuperAdminDashboard() {
                         {e.category}
                       </span>
                     </div>
-          </Link>
-                  
                   ))}
                 </div>
               )}

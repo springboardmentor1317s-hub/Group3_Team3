@@ -136,7 +136,7 @@ function EventCard({ event, onDelete }) {
         {/* Actions */}
         <div className="flex gap-2 pt-3 border-t border-slate-100">
           <Link
-              to={`/events/${event._id}`}
+            to={`/admin/dashboard/events/${event._id}`}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition"
           >
             View Details →

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom"; // Added Link
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,8 +13,7 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
-import EventDetails from "./pages/event/EventDetails";
-// import StudentEvents from "./pages/studentevents/StudentEvents"; // ✅ FIXED path
+import StudentEvents from "./pages/studentevents/StudentEvents";
 
 // Super Admin imports
 import PendingColleges from "./pages/superadmin/PendingColleges";
@@ -27,39 +26,105 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
         {/* Student Routes */}
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
-        {/* <Route path="/student/events" element={<StudentEvents />} />{" "} */}
-        {/* ✅ ADDED */}
+        <Route
+          path="/student/dashboard"
+          element={
+            <ProtectedRoute role="student">
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/events"
+          element={
+            <ProtectedRoute role="student">
+              <StudentEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/events" element={<StudentEvents />} />
+
         {/* Super Admin Routes */}
         <Route
           path="/super-admin/dashboard"
-          element={<SuperAdminDashboard />}
-        />
-        <Route path="/super-admin/profile" element={<SuperAdminProfile />} />
-        <Route path="/super-admin/colleges" element={<AllColleges />} />
-        <Route path="/super-admin/colleges/:id" element={<CollegeDetails />} />
-        <Route
-          path="/super-admin/pending-colleges"
-          element={<PendingColleges />}
-        />
-        <Route path="/super-admin/pending-events" element={<PendingEvents />} />
-        <Route path="/super-admin/reports" element={<Analytics />} />
-        {/* General Events Route */}
-        {/* <Route
-          path="/events"
           element={
-            <ProtectedRoute>
-              <StudentEvents /> 
+            <ProtectedRoute role="super_admin">
+              <SuperAdminDashboard />
             </ProtectedRoute>
           }
-        /> */}
+        />
+        <Route
+          path="/super-admin/profile"
+          element={
+            <ProtectedRoute role="super_admin">
+              <SuperAdminProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/colleges"
+          element={
+            <ProtectedRoute role="super_admin">
+              <AllColleges />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/colleges/:id"
+          element={
+            <ProtectedRoute role="super_admin">
+              <CollegeDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/pending-colleges"
+          element={
+            <ProtectedRoute role="super_admin">
+              <PendingColleges />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/pending-events"
+          element={
+            <ProtectedRoute role="super_admin">
+              <PendingEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/reports"
+          element={
+            <ProtectedRoute role="super_admin">
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+
         {/* College Admin Routes */}
-        <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
-        <Route path="/admin/profile" element={<AdminProfile />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeAdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute role="college_admin">
+              <AdminProfile />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/dashboard/create-event"
           element={
@@ -73,14 +138,6 @@ function App() {
           element={
             <ProtectedRoute role="college_admin">
               <CollegeEvents />
-            </ProtectedRoute>
-          }
-        />
-          <Route
-          path="/events/:id"
-          element={
-            <ProtectedRoute>
-              <EventDetails />
             </ProtectedRoute>
           }
         />
@@ -100,7 +157,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* 404 */}
+
+        {/* 404 - Fixed the missing <a> tag here */}
         <Route
           path="*"
           element={
@@ -108,12 +166,13 @@ function App() {
               <div className="text-center p-12">
                 <h1 className="text-6xl font-black text-slate-800 mb-4">404</h1>
                 <p className="text-2xl text-slate-600 mb-8">Page Not Found</p>
-                <a
-                  href="/"
-                  className="px-8 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl font-bold text-xl hover:shadow-2xl transition-all"
+
+                <Link
+                  to="/"
+                  className="px-8 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl font-bold text-xl hover:shadow-2xl transition-all inline-block"
                 >
                   Go Home
-                </a>
+                </Link>
               </div>
             </div>
           }
