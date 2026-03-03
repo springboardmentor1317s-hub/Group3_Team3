@@ -13,6 +13,7 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
+import StudentEvents from "./pages/studentevents/StudentEvents"; // ✅ NEW
 
 // Super Admin imports
 import PendingColleges from "./pages/superadmin/PendingColleges";
@@ -24,9 +25,6 @@ import Analytics from "./pages/superadmin/Analytics";
 function App() {
   return (
     <BrowserRouter>
-      {/* ✅ FIX: Removed global <Navbar /> from here
-          Each page already has its own <Navbar /> inside it.
-          Having Navbar in BOTH App.jsx AND each page caused the double header. */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -34,6 +32,8 @@ function App() {
 
         {/* Student Routes */}
         <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student/events" element={<StudentEvents />} />
+        <Route path="/events" element={<StudentEvents />} />
 
         {/* Super Admin Routes */}
         <Route
@@ -51,9 +51,8 @@ function App() {
         <Route path="/super-admin/reports" element={<Analytics />} />
 
         {/* College Admin Routes */}
+        <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
         <Route path="/admin/profile" element={<AdminProfile />} />
-
-        {/* Specific College Admin Routes FIRST */}
         <Route
           path="/admin/dashboard/create-event"
           element={
@@ -87,10 +86,7 @@ function App() {
           }
         />
 
-        {/* General College Admin Route LAST */}
-        <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
-
-        {/* 404 Catch All */}
+        {/* 404 */}
         <Route
           path="*"
           element={
