@@ -290,7 +290,7 @@ function StudentDashboard() {
                 {filteredEvents.map((event) => (
                   <Link
                     key={event._id}
-                    to={`/student/events/${event._id}`}
+                    to={`/student/events`}
                     className="group bg-gradient-to-br from-white to-slate-50 border border-slate-100 rounded-2xl p-6 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden"
                   >
                     {/* Category Badge */}

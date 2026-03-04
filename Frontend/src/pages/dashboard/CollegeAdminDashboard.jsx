@@ -23,7 +23,9 @@ function CollegeAdminDashboard() {
 
   const fetchEvents = async () => {
     try {
-      const res = await api.get("/events");
+      const res = await api.get("/events", {
+        params: { college_id: user?.id },
+      });
       setEvents(res.data.events || []);
     } catch (err) {
       console.error(err);

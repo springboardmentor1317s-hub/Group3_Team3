@@ -428,12 +428,25 @@ function StudentEvents() {
   const [sortBy, setSortBy] = useState("date_asc");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showFilters, setShowFilters] = useState(true);
+  const [collegeFilter, setCollegeFilter] = useState("");
+  const [colleges, setColleges] = useState([]);
 
   useEffect(() => {
     api
       .get("/events")
       .then((r) => {
-        setEvents(r.data.events || []);
+        const evts = r.data.events || [];
+        setEvents(evts);
+        // Build unique college list from events
+        const unique = [
+          ...new Map(
+            evts.map((e) => [
+              e.college_id,
+              { id: e.college_id, name: e.college_name || e.college_id },
+            ]),
+          ).values(),
+        ].filter((c) => c.id);
+        setColleges(unique);
       })
       .catch(() => toast.error("Failed to load events"))
       .finally(() => setLoading(false));
@@ -462,6 +475,8 @@ function StudentEvents() {
       );
     if (feeFilter === "paid")
       result = result.filter((e) => e.registration_fee > 0);
+    if (collegeFilter)
+      result = result.filter((e) => e.college_id === collegeFilter);
     if (dateFilter === "today")
       result = result.filter(
         (e) => new Date(e.start_date).toDateString() === now.toDateString(),
@@ -502,6 +517,7 @@ function StudentEvents() {
     dateFilter,
     feeFilter,
     sortBy,
+    collegeFilter,
   ]);
 
   const clearFilters = () => {
@@ -512,6 +528,7 @@ function StudentEvents() {
     setDateFilter("");
     setFeeFilter("all");
     setSortBy("date_asc");
+    setCollegeFilter("");
   };
 
   const activeFilterCount = [
@@ -520,6 +537,7 @@ function StudentEvents() {
     eventType !== "all",
     dateFilter !== "",
     feeFilter !== "all",
+    collegeFilter !== "",
   ].filter(Boolean).length;
 
   return (
@@ -622,7 +640,7 @@ function StudentEvents() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
                     Category
@@ -732,6 +750,27 @@ function StudentEvents() {
                     <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
+                    College
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={collegeFilter}
+                      onChange={(e) => setCollegeFilter(e.target.value)}
+                      className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
+                    >
+                      <option value="">All Colleges</option>
+                      {colleges.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
+                  </div>
+                </div>
               </div>
 
               {activeFilterCount > 0 && (
@@ -776,6 +815,16 @@ function StudentEvents() {
                     <span className="px-2.5 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold flex items-center gap-1">
                       Fee: {feeFilter}{" "}
                       <button onClick={() => setFeeFilter("all")}>
+                        <FaTimes className="text-xs" />
+                      </button>
+                    </span>
+                  )}
+                  {collegeFilter && (
+                    <span className="px-2.5 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                      College:{" "}
+                      {colleges.find((c) => c.id === collegeFilter)?.name ||
+                        collegeFilter}{" "}
+                      <button onClick={() => setCollegeFilter("")}>
                         <FaTimes className="text-xs" />
                       </button>
                     </span>

@@ -109,13 +109,47 @@ function CreateEvent() {
       });
       if (imageFile) formData.append("image", imageFile);
 
-      await api.post("/events/create", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Unauthorized! Please log in again.");
+        navigate("/login");
+        return;
+      }
+
+      const response = await api.post("/events/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
-      toast.success("Event created successfully! 🎉");
-      navigate("/admin/dashboard/events");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create event");
+
+      if (response.status === 201 || response.status === 200) {
+        toast.success("🎉 Event created successfully!");
+      } else {
+        toast.warning("Event created, but unexpected response received.");
+      }
+
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user?.accountType === "Super Admin") {
+        navigate("/super-admin/dashboard");
+      } else if (user?.accountType === "College Admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("❌ Error creating event:", error);
+      if (error.response) {
+        toast.error(
+          error.response.data?.message || "Server error while creating event",
+        );
+      } else if (error.request) {
+        toast.error(
+          "No response from server. Please check your internet connection.",
+        );
+      } else {
+        toast.error("Unexpected error occurred while creating the event.");
+      }
     } finally {
       setLoading(false);
     }

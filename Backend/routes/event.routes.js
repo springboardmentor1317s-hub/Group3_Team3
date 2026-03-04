@@ -18,7 +18,7 @@ router.get('/', getEvents);
 router.get('/:id', getEventById);
 
 // POST create event — handles multipart/form-data with optional image
-router.post('/create_events', protect, authorize('college_admin', 'super_admin'), handleUpload, createEvent);
+router.post('/create', protect, authorize('college_admin', 'super_admin'), handleUpload, createEvent);
 
 // PUT update event — handles multipart/form-data with optional image
 router.put('/:id', protect, authorize('college_admin', 'super_admin'), handleUpload, updateEvent);
