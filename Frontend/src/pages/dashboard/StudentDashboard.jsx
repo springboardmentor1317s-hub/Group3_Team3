@@ -28,7 +28,7 @@ function StudentDashboard() {
         const res = await api.get("/events");
         const events = res.data.events || [];
         setAllEvents(events);
-        
+
         // Default upcoming events (today ku aprm)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -41,7 +41,7 @@ function StudentDashboard() {
           })
           .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
           .slice(0, 6);
-        
+
         setFilteredEvents(upcoming);
       } catch (err) {
         console.error(err);
@@ -62,7 +62,7 @@ function StudentDashboard() {
       results = results.filter(
         (event) =>
           event.title.toLowerCase().includes(search.toLowerCase()) ||
-          event.description?.toLowerCase().includes(search.toLowerCase())
+          event.description?.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
@@ -72,34 +72,33 @@ function StudentDashboard() {
     }
 
     // Status filter (upcoming vs all)
-   // Status filter (All + Upcoming + Ongoing + Completed)
-if (filterStatus !== "all") {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  results = results.filter((event) => {
-    if (!event.start_date || !event.end_date) return false;
-    
-    const eventStart = new Date(event.start_date);
-    const eventEnd = new Date(event.end_date);
-    eventStart.setHours(0, 0, 0, 0);
-    eventEnd.setHours(0, 0, 0, 0);
-    
-    switch(filterStatus) {
-      case "upcoming":
-        return eventStart >= today;
-      case "ongoing":
-        return eventStart <= today && eventEnd >= today;
-      case "completed":
-        return eventEnd < today;
-      default:
-        return true;
+    // Status filter (All + Upcoming + Ongoing + Completed)
+    if (filterStatus !== "all") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      results = results.filter((event) => {
+        if (!event.start_date || !event.end_date) return false;
+
+        const eventStart = new Date(event.start_date);
+        const eventEnd = new Date(event.end_date);
+        eventStart.setHours(0, 0, 0, 0);
+        eventEnd.setHours(0, 0, 0, 0);
+
+        switch (filterStatus) {
+          case "upcoming":
+            return eventStart >= today;
+          case "ongoing":
+            return eventStart <= today && eventEnd >= today;
+          case "completed":
+            return eventEnd < today;
+          default:
+            return true;
+        }
+      });
     }
-  });
-}
 
-setFilteredEvents(results.slice(0, 6));
-
+    setFilteredEvents(results.slice(0, 6));
 
     setFilteredEvents(results.slice(0, 6));
   }, [search, filterCategory, filterStatus, allEvents]);
@@ -172,7 +171,9 @@ setFilteredEvents(results.slice(0, 6));
                   {s.icon}
                 </div>
                 <p className="text-2xl font-black text-slate-800">{s.value}</p>
-                <p className="text-xs text-slate-500 font-medium mt-1">{s.label}</p>
+                <p className="text-xs text-slate-500 font-medium mt-1">
+                  {s.label}
+                </p>
               </div>
             ))}
           </div>
@@ -191,7 +192,8 @@ setFilteredEvents(results.slice(0, 6));
                 Discover hackathons, cultural fests, sports & more
               </p>
               <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl font-semibold">
-                Explore Now <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                Explore Now{" "}
+                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
               </span>
             </Link>
             <Link
@@ -267,14 +269,21 @@ setFilteredEvents(results.slice(0, 6));
             {loading ? (
               <div className="grid md:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="h-40 bg-slate-100 rounded-2xl animate-pulse shadow-sm" />
+                  <div
+                    key={i}
+                    className="h-40 bg-slate-100 rounded-2xl animate-pulse shadow-sm"
+                  />
                 ))}
               </div>
             ) : filteredEvents.length === 0 ? (
               <div className="text-center py-16 text-slate-400">
                 <FaSearch className="text-6xl mx-auto mb-4 opacity-50" />
-                <h3 className="text-xl font-semibold mb-2 text-slate-600">No events found</h3>
-                <p className="text-sm">Try adjusting your filters or check back later</p>
+                <h3 className="text-xl font-semibold mb-2 text-slate-600">
+                  No events found
+                </h3>
+                <p className="text-sm">
+                  Try adjusting your filters or check back later
+                </p>
               </div>
             ) : (
               <div className="grid md:grid-cols-3 gap-6">
@@ -290,15 +299,16 @@ setFilteredEvents(results.slice(0, 6));
                         event.category === "hackathon"
                           ? "bg-blue-100 text-blue-800"
                           : event.category === "cultural"
-                          ? "bg-pink-100 text-pink-800"
-                          : event.category === "sports"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : event.category === "workshop"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-indigo-100 text-indigo-800"
+                            ? "bg-pink-100 text-pink-800"
+                            : event.category === "sports"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : event.category === "workshop"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-indigo-100 text-indigo-800"
                       }`}
                     >
-                      {event.category?.charAt(0).toUpperCase() + event.category?.slice(1)}
+                      {event.category?.charAt(0).toUpperCase() +
+                        event.category?.slice(1)}
                     </span>
 
                     {/* Event Title */}
@@ -310,11 +320,14 @@ setFilteredEvents(results.slice(0, 6));
                     <div className="space-y-2 mb-4 text-sm text-slate-600">
                       <div className="flex items-center gap-2">
                         <FaCalendarAlt className="text-indigo-500" />
-                        {new Date(event.start_date).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
+                        {new Date(event.start_date).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          },
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span>📍</span>
@@ -323,7 +336,8 @@ setFilteredEvents(results.slice(0, 6));
                       {event.registeredCount && (
                         <div className="flex items-center gap-2 text-indigo-600 font-semibold">
                           <span>👥</span>
-                          {event.registeredCount}/{event.max_participants || 100} registered
+                          {event.registeredCount}/
+                          {event.max_participants || 100} registered
                         </div>
                       )}
                     </div>
@@ -343,8 +357,15 @@ setFilteredEvents(results.slice(0, 6));
             {!loading && (
               <div className="mt-6 pt-6 border-t border-slate-200 text-center">
                 <p className="text-sm text-slate-500">
-                  Showing <span className="font-bold text-indigo-600">{filteredEvents.length}</span> of{" "}
-                  <span className="font-bold text-slate-800">{allEvents.length}</span> events
+                  Showing{" "}
+                  <span className="font-bold text-indigo-600">
+                    {filteredEvents.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-bold text-slate-800">
+                    {allEvents.length}
+                  </span>{" "}
+                  events
                 </p>
               </div>
             )}
