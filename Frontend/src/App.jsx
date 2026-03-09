@@ -13,7 +13,6 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
-import StudentEvents from "./pages/studentevents/StudentEvents";
 
 // Super Admin imports
 import PendingColleges from "./pages/superadmin/PendingColleges";
@@ -25,116 +24,91 @@ import AllEvents from "./pages/superadmin/AllEvents";
 function App() {
   return (
     <BrowserRouter>
-     <Routes>
-  {/* Public Routes */}
-  <Route path="/" element={<Home />} />
-  <Route path="/login" element={<Login />} />
-  <Route path="/register" element={<Register />} />
+      {/* ✅ FIX: Removed global <Navbar /> from here
+          Each page already has its own <Navbar /> inside it.
+          Having Navbar in BOTH App.jsx AND each page caused the double header. */}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-  {/* Student Routes */}
-  <Route path="/student/dashboard" element={
-    <ProtectedRoute role="student">
-      <StudentDashboard />
-    </ProtectedRoute>
-  } />
-  <Route path="/student/events" element={
-    <ProtectedRoute role="student">
-      <StudentEvents />
-    </ProtectedRoute>
-  } />
-  <Route path="/events" element={<StudentEvents />} />
+        {/* Student Routes */}
+        <Route path="/student/dashboard" element={<StudentDashboard />} />
 
-  {/* Super Admin Routes - ONLY WORKING ONES */}
-  <Route path="/super-admin/dashboard" element={
-    <ProtectedRoute role="super_admin">
-      <SuperAdminDashboard />
-    </ProtectedRoute>
-  } />
-  <Route path="/super-admin/profile" element={
-    <ProtectedRoute role="super_admin">
-      <SuperAdminProfile />
-    </ProtectedRoute>
-  } />
-  <Route path="/super-admin/colleges" element={
-    <ProtectedRoute role="super_admin">
-      <AllColleges />
-    </ProtectedRoute>
-  } />
-  <Route path="/super-admin/colleges/:id" element={
-    <ProtectedRoute role="super_admin">
-      <CollegeDetails />
-    </ProtectedRoute>
-  } />
-  <Route path="/super-admin/pending-colleges" element={
-    <ProtectedRoute role="super_admin">
-      <PendingColleges />
-    </ProtectedRoute>
-  } />
-  <Route path="/super-admin/pending-events" element={
-    <ProtectedRoute role="super_admin">
-      <PendingEvents />
-    </ProtectedRoute>
-  } />
-  <Route path="/super-admin/reports" element={
-    <ProtectedRoute role="super_admin">
-      <Analytics />
-    </ProtectedRoute>
-  } />
+        {/* Super Admin Routes */}
+        <Route
+          path="/super-admin/dashboard"
+          element={<SuperAdminDashboard />}
+        />
+        <Route path="/super-admin/profile" element={<SuperAdminProfile />} />
+        <Route path="/super-admin/colleges" element={<AllColleges />} />
+        <Route path="/super-admin/colleges/:id" element={<CollegeDetails />} />
+        <Route
+          path="/super-admin/pending-colleges"
+          element={<PendingColleges />}
+        />
+        <Route path="/super-admin/pending-events" element={<PendingEvents />} />
+        <Route path="/super-admin/reports" element={<Analytics />} />
 
-  {/* Super Admin Routes - IPA ADD PANNUNGA */}
-<Route path="/super-admin/events" element={
-  <ProtectedRoute role="super_admin">
-    <AllEvents />
-  </ProtectedRoute>
-} />
+        {/* College Admin Routes */}
+        <Route path="/admin/profile" element={<AdminProfile />} />
 
+        {/* Specific College Admin Routes FIRST */}
+        <Route
+          path="/admin/dashboard/create-event"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CreateEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events/:id"
+          element={
+            <ProtectedRoute role="college_admin">
+              <EditEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events/:eventId/registrations"
+          element={
+            <ProtectedRoute role="college_admin">
+              <ManageRegistrations />
+            </ProtectedRoute>
+          }
+        />
 
-  {/* College Admin Routes */}
-  <Route path="/admin/dashboard" element={
-    <ProtectedRoute role="college_admin">
-      <CollegeAdminDashboard />
-    </ProtectedRoute>
-  } />
-  <Route path="/admin/profile" element={
-    <ProtectedRoute role="college_admin">
-      <AdminProfile />
-    </ProtectedRoute>
-  } />
-  <Route path="/admin/dashboard/create-event" element={
-    <ProtectedRoute role="college_admin">
-      <CreateEvent />
-    </ProtectedRoute>
-  } />
-  <Route path="/admin/dashboard/events" element={
-    <ProtectedRoute role="college_admin">
-      <CollegeEvents />
-    </ProtectedRoute>
-  } />
-  <Route path="/admin/dashboard/events/:id" element={
-    <ProtectedRoute role="college_admin">
-      <EditEvent />
-    </ProtectedRoute>
-  } />
-  <Route path="/admin/dashboard/events/:eventId/registrations" element={
-    <ProtectedRoute role="college_admin">
-      <ManageRegistrations />
-    </ProtectedRoute>
-  } />
+        {/* General College Admin Route LAST */}
+        <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
 
-  {/* 404 */}
-  <Route path="*" element={
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
-      <div className="text-center p-12">
-        <h1 className="text-6xl font-black text-slate-800 mb-4">404</h1>
-        <p className="text-2xl text-slate-600 mb-8">Page Not Found</p>
-        <Link to="/" className="px-8 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl font-bold text-xl hover:shadow-2xl transition-all inline-block">
-          Go Home
-        </Link>
-      </div>
-    </div>
-  } />
-</Routes>
-
+        {/* 404 Catch All */}
+        <Route
+          path="*"
+          element={
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
+              <div className="text-center p-12">
+                <h1 className="text-6xl font-black text-slate-800 mb-4">404</h1>
+                <p className="text-2xl text-slate-600 mb-8">Page Not Found</p>
+                <a
+                  href="/"
+                  className="px-8 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl font-bold text-xl hover:shadow-2xl transition-all"
+                >
+                  Go Home
+                </a>
+              </div>
+            </div>
+          }
+        />
+      </Routes>
       <Chatbot />
     </BrowserRouter>
   );
