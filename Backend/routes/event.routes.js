@@ -1,14 +1,29 @@
 import express from 'express';
-import { createEvent, getEvents } from '../controllers/eventController.js';
-import { protect } from '../middleware/auth.middleware.js';
+import {
+  createEvent,
+  getEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+} from '../controllers/eventController.js';
+import { protect, authorize } from '../middleware/auth.middleware.js';
+import { handleUpload } from '../middleware/upload.middleware.js';
 
 const router = express.Router();
 
-// ✅ FIX 5: Wired up real createEvent controller instead of mock handler
-//           Protected route — user must be logged in to create an event
-router.post('/create', protect, createEvent);
-router.get("/", protect, getEvents);
 // GET all events (public)
 router.get('/', getEvents);
+
+// GET single event by ID (public)
+router.get('/:id', getEventById);
+
+// POST create event — handles multipart/form-data with optional image
+router.post('/create', protect, authorize('college_admin', 'super_admin'), handleUpload, createEvent);
+
+// PUT update event — handles multipart/form-data with optional image
+router.put('/:id', protect, authorize('college_admin', 'super_admin'), handleUpload, updateEvent);
+
+// DELETE event
+router.delete('/:id', protect, authorize('college_admin', 'super_admin'), deleteEvent);
 
 export default router;

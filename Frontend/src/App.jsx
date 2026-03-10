@@ -13,7 +13,11 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
-
+import StudentNotifications from "./pages/dashboard/StudentNotifications";
+import StudentProfile from "./pages/profiledit/StudentProfile";
+import RegisterEvents from "./pages/student/RegisterEvents";
+import MyRegistrations from "./pages/student/MyRegistrations";
+import StudentEvents from "./pages/studentevents/StudentEvents"; 
 // Super Admin imports
 import PendingColleges from "./pages/superadmin/PendingColleges";
 import PendingEvents from "./pages/superadmin/PendingEvents";
@@ -32,8 +36,34 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Student Routes */}
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
+     
+         {/* ✅ CORRECT - Standalone routes */}
+        <Route path="/student/dashboard" element={
+          <ProtectedRoute role="student">
+            <StudentDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/notifications" element={
+          <ProtectedRoute role="student">
+            <StudentNotifications />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/events" element={
+          <ProtectedRoute role="student">
+            <StudentEvents />  {/* Your existing events page */}
+          </ProtectedRoute>
+        } />
+        <Route path="/student/registrations" element={
+          <ProtectedRoute role="student">
+            <MyRegistrations />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/student/profile" element={
+          <ProtectedRoute role="student">
+            <StudentProfile />
+          </ProtectedRoute>
+        } />
 
         {/* Super Admin Routes */}
         <Route
