@@ -1,21 +1,30 @@
 import express from 'express';
 import {
-registerForEvent,
-getEventRegistrations,
-updateRegistrationStatus
+  registerForEvent,
+  getEventRegistrations,
+  updateRegistrationStatus,
+  getMyRegistrations
 } from '../controllers/registration.controller.js';
-
 import { protect, authorize } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-/* Student registers */
+// Student: register for an event
 router.post('/register', protect, authorize('student'), registerForEvent);
 
-/* Admin view participants */
-router.get('/event/:event_id', protect, authorize('college_admin','super_admin'), getEventRegistrations);
+// Student: view own registrations
+router.get('/my', protect, authorize('student'), getMyRegistrations);
 
-/* Admin approve/reject */
-router.put('/:id/status', protect, authorize('college_admin','super_admin'), updateRegistrationStatus);
+// Admin: view all participants for an event
+router.get('/event/:event_id', protect, authorize('college_admin', 'super_admin'), getEventRegistrations);
+
+// Admin: approve or reject a registration  ← fixed from /manage to /:id/status
+router.put('/:id/status', protect, authorize('college_admin', 'super_admin'), updateRegistrationStatus);
 
 export default router;
+
+
+
+
+
+

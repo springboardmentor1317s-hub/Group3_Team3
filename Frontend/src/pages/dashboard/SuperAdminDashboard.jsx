@@ -2,240 +2,229 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import api from "../../services/api";
-import { getUser } from "../../services/auth";
 import {
-  FaCalendarAlt,
   FaUsers,
-  FaShieldAlt,
-  FaExclamationTriangle,
+  FaCalendarAlt,
   FaCheckCircle,
-  FaServer,
-  FaDatabase,
-  FaBolt,
+  FaExclamationTriangle,
+  FaSearch,
+  FaUserPlus,
+  FaChartBar,
+  FaEye,
+  FaClock,
+  FaBell,
 } from "react-icons/fa";
 
 function SuperAdminDashboard() {
-  const user = getUser();
-  const [events, setEvents] = useState([]);
+  const [stats, setStats] = useState({
+    totalEvents: 0,
+    totalColleges: 0,
+    totalRegistrations: 0,
+    pendingEvents: 0,
+  });
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    api
-      .get("/events")
-      .then((r) => setEvents(r.data.events || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const fetchStats = async () => {
+      try {
+        const [eventsRes, collegesRes] = await Promise.all([
+          api.get("/events"),
+          api.get("/users?role=college_admin"),
+        ]);
+        const events = eventsRes.data.events || [];
+        const colleges = collegesRes.data.users || [];
+        const pending = events.filter((e) => e.status === "draft").length;
+        const totalRegs = events.reduce(
+          (sum, e) => sum + (e.current_participants || 0),
+          0,
+        );
+        setStats({
+          totalEvents: events.length,
+          totalColleges: colleges.length,
+          totalRegistrations: totalRegs,
+          pendingEvents: pending,
+        });
+      } catch (err) {
+        console.error("Failed to load stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
   }, []);
-
-  const stats = [
-    {
-      label: "Total Events",
-      value: events.length,
-      change: "+12%",
-      icon: <FaCalendarAlt />,
-      color: "from-indigo-500 to-purple-600",
-    },
-    {
-      label: "Active Users",
-      value: "1,234",
-      change: "+8%",
-      icon: <FaUsers />,
-      color: "from-emerald-500 to-teal-600",
-    },
-    {
-      label: "Total Registrations",
-      value: events.reduce((s, e) => s + (e.current_participants || 0), 0),
-      change: "+23%",
-      icon: <FaCheckCircle />,
-      color: "from-blue-500 to-cyan-600",
-    },
-    {
-      label: "Pending Reviews",
-      value: 0,
-      change: "-2%",
-      icon: <FaExclamationTriangle />,
-      color: "from-orange-400 to-pink-500",
-    },
-  ];
-
-  const systemHealth = [
-    { label: "Server Status", value: "Healthy", color: "text-green-600" },
-    { label: "Database", value: "Connected", color: "text-green-600" },
-    { label: "API Response", value: "152ms", color: "text-blue-600" },
-    { label: "Uptime", value: "99.9%", color: "text-green-600" },
-  ];
-
-  const tabs = [
-    "Overview",
-    "User Management",
-    "Event Management",
-    "Registrations",
-    "Admin Logs",
-  ];
-  const [activeTab, setActiveTab] = useState("Overview");
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/30 p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-black text-slate-800">
-                Admin Dashboard
-              </h1>
-              <p className="text-slate-500 mt-1">
-                Manage platform activities and monitor performance
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold hover:bg-white transition">
-                Filter
-              </button>
-              <Link
-                to="/super-admin/pending-events"
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition"
-              >
-                <FaShieldAlt /> Security
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {stats.map((s, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100"
-              >
-                <div
-                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white text-lg mb-3`}
-                >
-                  {s.icon}
-                </div>
-                <p className="text-2xl font-black text-slate-800">{s.value}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-slate-500 font-medium">
-                    {s.label}
-                  </p>
-                  <span
-                    className={`text-xs font-semibold ${s.change.startsWith("+") ? "text-green-600" : "text-red-500"}`}
-                  >
-                    {s.change}
-                  </span>
-                </div>
+          {/* Header */}
+          <div className="mb-12">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-lg">
+                <FaChartBar className="text-white text-xl" />
               </div>
-            ))}
-          </div>
-
-          <div className="flex gap-1 mb-6 bg-white rounded-xl p-1 shadow-sm border border-slate-100 w-fit">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === tab ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:bg-slate-100"}`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-              <h2 className="text-lg font-black text-slate-800 mb-4">
-                Recent Events
-              </h2>
-              {loading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="h-12 bg-slate-100 rounded-lg animate-pulse"
-                    />
-                  ))}
-                </div>
-              ) : events.length === 0 ? (
-                <p className="text-slate-400 text-sm">No events yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {events.slice(0, 5).map((e) => (
-                    <div
-                      key={e._id}
-                      className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          <FaCalendarAlt className="text-indigo-600 text-sm" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-800 text-sm">
-                            {e.title}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {e.current_participants || 0} participants
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize
-                        ${e.category === "hackathon" ? "bg-blue-100 text-blue-700" : e.category === "cultural" ? "bg-pink-100 text-pink-700" : "bg-purple-100 text-purple-700"}`}
-                      >
-                        {e.category}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div>
+                <h1 className="text-4xl font-black bg-gradient-to-r from-slate-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent">
+                  Super Admin Dashboard
+                </h1>
+                <p className="text-xl text-slate-600 mt-1">
+                  Platform-wide management & analytics
+                </p>
+              </div>
             </div>
+          </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-              <h2 className="text-lg font-black text-slate-800 mb-4">
-                System Health
-              </h2>
-              <div className="space-y-4">
-                {systemHealth.map((h, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0"
-                  >
-                    <div className="flex items-center gap-2 text-slate-600 text-sm">
-                      {i === 0 && <FaServer className="text-slate-400" />}
-                      {i === 1 && <FaDatabase className="text-slate-400" />}
-                      {i === 2 && <FaBolt className="text-slate-400" />}
-                      {i === 3 && <FaCheckCircle className="text-slate-400" />}
-                      {h.label}
-                    </div>
-                    <span className={`font-bold text-sm ${h.color}`}>
-                      {h.value}
-                    </span>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <Link to="/super-admin/all-events" className="group">
+              <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all border border-slate-100">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <FaCalendarAlt className="text-white text-2xl" />
                   </div>
-                ))}
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                      Total Events
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {loading ? "—" : stats.totalEvents}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-slate-500 text-sm flex items-center gap-1">
+                  <FaClock className="text-amber-500" />{" "}
+                  {loading ? "—" : stats.pendingEvents} pending
+                </p>
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <Link
-                  to="/super-admin/pending-events"
-                  className="flex items-center gap-2 p-3 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-semibold hover:bg-indigo-100 transition"
-                >
-                  Pending Events
-                </Link>
-                <Link
-                  to="/super-admin/pending-colleges"
-                  className="flex items-center gap-2 p-3 bg-purple-50 text-purple-700 rounded-xl text-sm font-semibold hover:bg-purple-100 transition"
-                >
-                  Pending Colleges
-                </Link>
-                <Link
-                  to="/super-admin/colleges"
-                  className="flex items-center gap-2 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition"
-                >
-                  All Colleges
-                </Link>
-                <Link
-                  to="/super-admin/reports"
-                  className="flex items-center gap-2 p-3 bg-orange-50 text-orange-700 rounded-xl text-sm font-semibold hover:bg-orange-100 transition"
-                >
-                  Analytics
-                </Link>
+            </Link>
+
+            <Link to="/super-admin/colleges" className="group">
+              <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all border border-slate-100">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <FaUsers className="text-white text-2xl" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                      Colleges
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {loading ? "—" : stats.totalColleges}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-slate-500 text-sm">Active college admins</p>
               </div>
+            </Link>
+
+            <Link to="/super-admin/reports" className="group">
+              <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all border border-slate-100">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <FaCheckCircle className="text-white text-2xl" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                      Registrations
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {loading
+                        ? "—"
+                        : stats.totalRegistrations.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-slate-500 text-sm">
+                  Total student registrations
+                </p>
+              </div>
+            </Link>
+
+            <Link to="/super-admin/pending-colleges" className="group">
+              <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all border border-slate-100">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <FaExclamationTriangle className="text-white text-2xl" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                      Pending Events
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {loading ? "—" : stats.pendingEvents}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-slate-500 text-sm">Awaiting approval</p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Search */}
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/50 mb-12">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8">
+              <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                <FaSearch className="text-indigo-600" />
+                Quick Overview
+              </h2>
+              <div className="relative">
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search events, colleges..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 pr-4 py-3 w-80 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Management Actions */}
+          <div className="grid md:grid-cols-2 gap-8">
+            <Link
+              to="/super-admin/pending-events"
+              className="group bg-gradient-to-br from-amber-50 to-orange-50 p-8 rounded-3xl shadow-xl hover:shadow-2xl border border-amber-200"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <FaExclamationTriangle className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900">
+                    Pending Events
+                  </h3>
+                  <p className="text-slate-600">
+                    {loading
+                      ? "Loading..."
+                      : `${stats.pendingEvents} events awaiting approval`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-indigo-600 font-semibold text-lg">
+                Review Now <FaEye className="ml-1" />
+              </div>
+            </Link>
+
+            <div className="space-y-4">
+              <Link
+                to="/super-admin/colleges"
+                className="block w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all text-center"
+              >
+                <FaUserPlus className="text-3xl mx-auto mb-3" />
+                <h4 className="font-bold text-xl">Manage Colleges</h4>
+                <p className="text-emerald-100 text-sm">View all colleges</p>
+              </Link>
+              <Link
+                to="/super-admin/reports"
+                className="block w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all text-center"
+              >
+                <FaBell className="text-3xl mx-auto mb-3" />
+                <h4 className="font-bold text-xl">View Reports</h4>
+                <p className="text-indigo-100 text-sm">Analytics dashboard</p>
+              </Link>
             </div>
           </div>
         </div>

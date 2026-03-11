@@ -109,7 +109,6 @@ function CreateEvent() {
       });
       if (imageFile) formData.append("image", imageFile);
 
-<<<<<<< HEAD
       const token = localStorage.getItem("token");
       if (!token) {
         toast.error("Unauthorized! Please log in again.");
@@ -151,15 +150,6 @@ function CreateEvent() {
       } else {
         toast.error("Unexpected error occurred while creating the event.");
       }
-=======
-      await api.post("/events/create", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Event created successfully! 🎉");
-      navigate("/admin/dashboard/events");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create event");
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
     } finally {
       setLoading(false);
     }

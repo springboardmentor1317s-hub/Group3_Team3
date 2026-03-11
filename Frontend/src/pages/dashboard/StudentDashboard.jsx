@@ -1,513 +1,228 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import Navbar from "../../components/Navbar";
-import api from "../../services/api";
-import { getUser } from "../../services/auth";
-import {
-  FaCalendarAlt,
-  FaCheckCircle,
-  FaClock,
-  FaTrophy,
-  FaSearch,
-  FaArrowRight,
-  FaFilter,
-} from "react-icons/fa";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
-function StudentDashboard() {
-  const user = getUser();
-  const [allEvents, setAllEvents] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]);
-  const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [loading, setLoading] = useState(true);
-<<<<<<< HEAD
-=======
+// Student
+import StudentDashboard from "./pages/dashboard/StudentDashboard";
+import StudentNotifications from "./pages/dashboard/StudentNotifications";
+import StudentProfile from "./pages/profiledit/StudentProfile";
+import StudentEvents from "./pages/studentevents/StudentEvents";
+import MyRegistrations from "./pages/studentevents/MyRegistrations";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await api.get("/events");
-        const events = res.data.events || [];
-        setAllEvents(events);
-        
-        // Default upcoming events (today ku aprm)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const upcoming = events
-          .filter((e) => {
-            if (!e.start_date) return false;
-            const eventDate = new Date(e.start_date);
-            eventDate.setHours(0, 0, 0, 0);
-            return eventDate >= today;
-          })
-          .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
-          .slice(0, 6);
-        
-        setFilteredEvents(upcoming);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+// College Admin
+import CollegeAdminDashboard from "./pages/dashboard/CollegeAdminDashboard";
+import AdminProfile from "./pages/profiledit/AdminProfile";
+import CreateEvent from "./pages/event/CreateEvent";
+import EditEvent from "./pages/event/EditEvent";
+import CollegeEvents from "./pages/event/CollegeEvents";
+import ManageRegistrations from "./pages/event/ManageRegistrations";
 
-    fetchData();
-  }, []);
+// Super Admin
+import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
+import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
+import PendingColleges from "./pages/superadmin/PendingColleges";
+import PendingEvents from "./pages/superadmin/PendingEvents";
+import AllColleges from "./pages/superadmin/AllColleges";
+import CollegeDetails from "./pages/superadmin/CollegeDetails";
+import Analytics from "./pages/superadmin/Analytics";
+import AllEvents from "./pages/superadmin/AllEvents";
 
-  // Filter events based on search, category, status
-  useEffect(() => {
-    let results = [...allEvents];
+import Chatbot from "./components/Chatbot";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-    // Search filter
-    if (search) {
-      results = results.filter(
-        (event) =>
-          event.title.toLowerCase().includes(search.toLowerCase()) ||
-          event.description?.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    // Category filter
-    if (filterCategory !== "all") {
-      results = results.filter((event) => event.category === filterCategory);
-    }
-
-    // Status filter (upcoming vs all)
-   // Status filter (All + Upcoming + Ongoing + Completed)
-if (filterStatus !== "all") {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  results = results.filter((event) => {
-    if (!event.start_date || !event.end_date) return false;
-    
-    const eventStart = new Date(event.start_date);
-    const eventEnd = new Date(event.end_date);
-    eventStart.setHours(0, 0, 0, 0);
-    eventEnd.setHours(0, 0, 0, 0);
-    
-    switch(filterStatus) {
-      case "upcoming":
-        return eventStart >= today;
-      case "ongoing":
-        return eventStart <= today && eventEnd >= today;
-      case "completed":
-        return eventEnd < today;
-      default:
-        return true;
-    }
-  });
-}
-
-setFilteredEvents(results.slice(0, 6));
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await api.get("/events");
-        const events = res.data.events || [];
-        setAllEvents(events);
-
-<<<<<<< HEAD
-        // Default upcoming events (today ku aprm)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const upcoming = events
-          .filter((e) => {
-            if (!e.start_date) return false;
-            const eventDate = new Date(e.start_date);
-            eventDate.setHours(0, 0, 0, 0);
-            return eventDate >= today;
-          })
-          .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
-          .slice(0, 6);
-
-        setFilteredEvents(upcoming);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Filter events based on search, category, status
-  useEffect(() => {
-    let results = [...allEvents];
-
-    // Search filter
-    if (search) {
-      results = results.filter(
-        (event) =>
-          event.title.toLowerCase().includes(search.toLowerCase()) ||
-          event.description?.toLowerCase().includes(search.toLowerCase()),
-      );
-    }
-
-    // Category filter
-    if (filterCategory !== "all") {
-      results = results.filter((event) => event.category === filterCategory);
-    }
-
-    // Status filter (upcoming vs all)
-    // Status filter (All + Upcoming + Ongoing + Completed)
-    if (filterStatus !== "all") {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      results = results.filter((event) => {
-        if (!event.start_date || !event.end_date) return false;
-
-        const eventStart = new Date(event.start_date);
-        const eventEnd = new Date(event.end_date);
-        eventStart.setHours(0, 0, 0, 0);
-        eventEnd.setHours(0, 0, 0, 0);
-
-        switch (filterStatus) {
-          case "upcoming":
-            return eventStart >= today;
-          case "ongoing":
-            return eventStart <= today && eventEnd >= today;
-          case "completed":
-            return eventEnd < today;
-          default:
-            return true;
-        }
-      });
-    }
-
-    setFilteredEvents(results.slice(0, 6));
-
-=======
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-    setFilteredEvents(results.slice(0, 6));
-  }, [search, filterCategory, filterStatus, allEvents]);
-
-  const clearFilters = () => {
-    setSearch("");
-    setFilterCategory("all");
-    setFilterStatus("all");
-  };
-
-  const stats = [
-    {
-      label: "Total Events",
-      value: allEvents.length,
-      icon: <FaCalendarAlt />,
-      color: "from-indigo-500 to-purple-600",
-    },
-    {
-      label: "Upcoming Events",
-      value: filteredEvents.length,
-      icon: <FaClock />,
-      color: "from-emerald-500 to-teal-600",
-    },
-    {
-      label: "Hackathons",
-      value: allEvents.filter((e) => e.category === "hackathon").length,
-      icon: <FaTrophy />,
-      color: "from-orange-400 to-pink-500",
-    },
-    {
-      label: "Cultural",
-      value: allEvents.filter((e) => e.category === "cultural").length,
-      icon: <FaCheckCircle />,
-      color: "from-yellow-400 to-orange-500",
-    },
-  ];
-
-  const categories = [
-    { value: "all", label: "All Types" },
-    { value: "hackathon", label: "Hackathon 💻" },
-    { value: "cultural", label: "Cultural 🎭" },
-    { value: "sports", label: "Sports ⚽" },
-    { value: "workshop", label: "Workshop 📚" },
-    { value: "seminar", label: "Seminar 🎤" },
-  ];
-
+function App() {
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-black text-slate-800">
-              Welcome back, {user?.fullName || user?.name || "Student"}! 👋
-            </h1>
-            <p className="text-slate-500 mt-1">{user?.college} · Student</p>
-          </div>
+    <BrowserRouter>
+      <Routes>
+        {/* ── Public ── */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/events" element={<StudentEvents />} />
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {stats.map((s, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-all"
-              >
-                <div
-                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white text-lg mb-3`}
+        {/* ── Student ── */}
+        <Route
+          path="/student/dashboard"
+          element={
+            <ProtectedRoute role="student">
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/events"
+          element={
+            <ProtectedRoute role="student">
+              <StudentEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/registrations"
+          element={
+            <ProtectedRoute role="student">
+              <MyRegistrations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/notifications"
+          element={
+            <ProtectedRoute role="student">
+              <StudentNotifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/profile"
+          element={
+            <ProtectedRoute role="student">
+              <StudentProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ── Super Admin ── */}
+        <Route
+          path="/super-admin/dashboard"
+          element={
+            <ProtectedRoute role="super_admin">
+              <SuperAdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/profile"
+          element={
+            <ProtectedRoute role="super_admin">
+              <SuperAdminProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/colleges"
+          element={
+            <ProtectedRoute role="super_admin">
+              <AllColleges />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/colleges/:id"
+          element={
+            <ProtectedRoute role="super_admin">
+              <CollegeDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/pending-colleges"
+          element={
+            <ProtectedRoute role="super_admin">
+              <PendingColleges />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/pending-events"
+          element={
+            <ProtectedRoute role="super_admin">
+              <PendingEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/reports"
+          element={
+            <ProtectedRoute role="super_admin">
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/all-events"
+          element={
+            <ProtectedRoute role="super_admin">
+              <AllEvents />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ── College Admin ── */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeAdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute role="college_admin">
+              <AdminProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/create-event"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CreateEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events/:id"
+          element={
+            <ProtectedRoute role="college_admin">
+              <EditEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events/:eventId/registrations"
+          element={
+            <ProtectedRoute role="college_admin">
+              <ManageRegistrations />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ── 404 ── */}
+        <Route
+          path="*"
+          element={
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
+              <div className="text-center p-12">
+                <h1 className="text-8xl font-black text-slate-200 mb-4">404</h1>
+                <p className="text-2xl font-bold text-slate-600 mb-8">
+                  Page Not Found
+                </p>
+                <Link
+                  to="/"
+                  className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold hover:shadow-xl transition-all inline-block"
                 >
-                  {s.icon}
-                </div>
-                <p className="text-2xl font-black text-slate-800">{s.value}</p>
-<<<<<<< HEAD
-                <p className="text-xs text-slate-500 font-medium mt-1">
-                  {s.label}
-                </p>
-=======
-                <p className="text-xs text-slate-500 font-medium mt-1">{s.label}</p>
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
+                  Go Home
+                </Link>
               </div>
-            ))}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Link
-              to="/student/events"
-              className="group bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white hover:shadow-2xl hover:-translate-y-1 transition-all"
-            >
-              <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                <FaSearch className="text-xl" />
-                Browse Events
-              </h3>
-              <p className="text-indigo-100 text-sm mb-4">
-                Discover hackathons, cultural fests, sports & more
-              </p>
-              <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl font-semibold">
-<<<<<<< HEAD
-                Explore Now{" "}
-                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-=======
-                Explore Now <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-              </span>
-            </Link>
-            <Link
-              to="/student/registrations"
-              className="group bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white hover:shadow-2xl hover:-translate-y-1 transition-all"
-            >
-              <h3 className="text-lg font-bold mb-2">My Registrations</h3>
-              <p className="text-emerald-100 text-sm mb-4">
-                View and manage all your event registrations
-              </p>
-              <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl font-semibold">
-                View All <FaArrowRight />
-              </span>
-            </Link>
-          </div>
-
-          {/* Events Filter Section - Screenshot maari! */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-slate-100 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-                <FaFilter className="text-indigo-600" />
-                Upcoming Events
-              </h2>
-              <button
-                onClick={clearFilters}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-all flex items-center gap-1"
-              >
-                Clear Filters
-              </button>
             </div>
-
-            {/* Filter Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {/* Search */}
-              <div className="relative">
-                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg" />
-                <input
-                  type="text"
-                  placeholder="Search events..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 text-lg shadow-sm"
-                />
-              </div>
-
-              {/* Category Filter */}
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="p-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 text-lg shadow-sm"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-
-              {/* Status Filter */}
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="p-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 text-lg shadow-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="upcoming">Upcoming ⏳</option>
-                <option value="ongoing">Ongoing ▶️</option>
-                <option value="completed">Completed ✅</option>
-              </select>
-            </div>
-
-            {/* Events Grid */}
-            {loading ? (
-              <div className="grid md:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-<<<<<<< HEAD
-                  <div
-                    key={i}
-                    className="h-40 bg-slate-100 rounded-2xl animate-pulse shadow-sm"
-                  />
-=======
-                  <div key={i} className="h-40 bg-slate-100 rounded-2xl animate-pulse shadow-sm" />
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-                ))}
-              </div>
-            ) : filteredEvents.length === 0 ? (
-              <div className="text-center py-16 text-slate-400">
-                <FaSearch className="text-6xl mx-auto mb-4 opacity-50" />
-<<<<<<< HEAD
-                <h3 className="text-xl font-semibold mb-2 text-slate-600">
-                  No events found
-                </h3>
-                <p className="text-sm">
-                  Try adjusting your filters or check back later
-                </p>
-=======
-                <h3 className="text-xl font-semibold mb-2 text-slate-600">No events found</h3>
-                <p className="text-sm">Try adjusting your filters or check back later</p>
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-3 gap-6">
-                {filteredEvents.map((event) => (
-                  <Link
-                    key={event._id}
-<<<<<<< HEAD
-                    to={`/student/events`}
-=======
-                    to={`/student/events/${event._id}`}
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-                    className="group bg-gradient-to-br from-white to-slate-50 border border-slate-100 rounded-2xl p-6 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden"
-                  >
-                    {/* Category Badge */}
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${
-                        event.category === "hackathon"
-                          ? "bg-blue-100 text-blue-800"
-                          : event.category === "cultural"
-<<<<<<< HEAD
-                            ? "bg-pink-100 text-pink-800"
-                            : event.category === "sports"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : event.category === "workshop"
-                                ? "bg-purple-100 text-purple-800"
-                                : "bg-indigo-100 text-indigo-800"
-                      }`}
-                    >
-                      {event.category?.charAt(0).toUpperCase() +
-                        event.category?.slice(1)}
-=======
-                          ? "bg-pink-100 text-pink-800"
-                          : event.category === "sports"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : event.category === "workshop"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-indigo-100 text-indigo-800"
-                      }`}
-                    >
-                      {event.category?.charAt(0).toUpperCase() + event.category?.slice(1)}
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-                    </span>
-
-                    {/* Event Title */}
-                    <h4 className="font-black text-lg text-slate-900 mb-3 leading-tight group-hover:text-indigo-700 transition-colors">
-                      {event.title}
-                    </h4>
-
-                    {/* Event Details */}
-                    <div className="space-y-2 mb-4 text-sm text-slate-600">
-                      <div className="flex items-center gap-2">
-                        <FaCalendarAlt className="text-indigo-500" />
-<<<<<<< HEAD
-                        {new Date(event.start_date).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          },
-                        )}
-=======
-                        {new Date(event.start_date).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span>📍</span>
-                        {event.location || event.venue || "Campus"}
-                      </div>
-                      {event.registeredCount && (
-                        <div className="flex items-center gap-2 text-indigo-600 font-semibold">
-                          <span>👥</span>
-<<<<<<< HEAD
-                          {event.registeredCount}/
-                          {event.max_participants || 100} registered
-=======
-                          {event.registeredCount}/{event.max_participants || 100} registered
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-                        </div>
-                      )}
-                    </div>
-
-                    {/* View Details Button */}
-                    <div className="pt-4 border-t border-slate-100">
-                      <span className="inline-flex items-center gap-2 text-indigo-600 font-bold text-sm hover:text-indigo-700 group-hover:translate-x-1 transition-all">
-                        View Details <FaArrowRight />
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {/* Results Count */}
-            {!loading && (
-              <div className="mt-6 pt-6 border-t border-slate-200 text-center">
-                <p className="text-sm text-slate-500">
-<<<<<<< HEAD
-                  Showing{" "}
-                  <span className="font-bold text-indigo-600">
-                    {filteredEvents.length}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-bold text-slate-800">
-                    {allEvents.length}
-                  </span>{" "}
-                  events
-=======
-                  Showing <span className="font-bold text-indigo-600">{filteredEvents.length}</span> of{" "}
-                  <span className="font-bold text-slate-800">{allEvents.length}</span> events
->>>>>>> ea643e9 (feat: student dashboard filter - added completed status + all events filter)
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </>
+          }
+        />
+      </Routes>
+      <Chatbot />
+    </BrowserRouter>
   );
 }
 
-export default StudentDashboard;
+export default App;
