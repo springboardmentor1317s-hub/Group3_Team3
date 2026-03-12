@@ -1,206 +1,828 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+// src/pages/studentevents/StudentEvents.jsx
+// ✅ FIXED: Register Now button wired to backend POST /registrations/register
+import { useState, useEffect } from "react";
+import Navbar from "../../components/Navbar";
 import api from "../../services/api";
-import { toast } from "react-toastify";
+import { getUser } from "../../services/auth";
+import {
+  FaSearch,
+  FaFilter,
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaUsers,
+  FaTimes,
+  FaChevronDown,
+  FaTicketAlt,
+  FaSortAmountDown,
+} from "react-icons/fa";
 
-function ManageRegistrations() {
-  const { eventId } = useParams();
-  const [registrations, setRegistrations] = useState([]);
+const API_BASE =
+  import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
 
-  const fetchRegs = async () => {
-    try {
-      const res = await api.get(`/registrations/event/${eventId}`);
-      setRegistrations(res.data.registrations || []);
-    } catch {
-      toast.error("Failed to load registrations");
-    }
+const CATEGORIES = [
+  "all",
+  "sports",
+  "hackathon",
+  "cultural",
+  "workshop",
+  "seminar",
+  "social",
+  "technical",
+  "other",
+];
+const STATUSES = ["all", "published", "ongoing", "completed"];
+const EVENT_TYPES = ["all", "offline", "online", "hybrid"];
+const DATE_FILTERS = [
+  { label: "All Dates", value: "" },
+  { label: "Today", value: "today" },
+  { label: "This Week", value: "week" },
+  { label: "This Month", value: "month" },
+];
+const FEE_FILTERS = [
+  { label: "Any Fee", value: "all" },
+  { label: "Free Only", value: "free" },
+  { label: "Paid Only", value: "paid" },
+];
+const SORT_OPTIONS = [
+  { label: "Date (Newest)", value: "date_asc" },
+  { label: "Date (Latest)", value: "date_desc" },
+  { label: "Name A→Z", value: "name_asc" },
+  { label: "Most Participants", value: "participants" },
+];
+
+const CATEGORY_GRADIENT = {
+  hackathon: "from-blue-500 to-indigo-600",
+  cultural: "from-pink-500 to-purple-600",
+  sports: "from-green-500 to-emerald-600",
+  workshop: "from-yellow-500 to-orange-500",
+  seminar: "from-cyan-500 to-blue-500",
+  social: "from-orange-500 to-red-500",
+  technical: "from-violet-500 to-purple-600",
+  other: "from-indigo-500 to-purple-600",
+};
+const CATEGORY_EMOJI = {
+  hackathon: "💻",
+  cultural: "🎭",
+  sports: "🏆",
+  workshop: "🔧",
+  seminar: "🎓",
+  social: "🎉",
+  technical: "⚙️",
+  other: "📅",
+};
+const CATEGORY_COLORS = {
+  hackathon: "bg-blue-100 text-blue-700",
+  cultural: "bg-pink-100 text-pink-700",
+  sports: "bg-green-100 text-green-700",
+  workshop: "bg-yellow-100 text-yellow-700",
+  seminar: "bg-purple-100 text-purple-700",
+  social: "bg-orange-100 text-orange-700",
+  technical: "bg-cyan-100 text-cyan-700",
+  other: "bg-slate-100 text-slate-600",
+};
+
+// ─── Toast ───────────────────────────────────────────────────────────────────
+function Toast({ toast }) {
+  if (!toast) return null;
+  const bg = {
+    success: "bg-emerald-500",
+    error: "bg-red-500",
+    info: "bg-indigo-500",
   };
+  return (
+    <div
+      className={`fixed top-5 right-5 z-[100] px-6 py-3 rounded-2xl shadow-2xl font-bold text-white transition-all ${bg[toast.type] || bg.info}`}
+    >
+      {toast.msg}
+    </div>
+  );
+}
 
-  useEffect(() => {
-    fetchRegs();
-  }, [eventId]);
-
-  const handleStatus = async (id, status) => {
-    try {
-      await api.put(`/registrations/${id}/status`, { status });
-      toast.success(`Marked as ${status}`);
-      fetchRegs();
-    } catch {
-      toast.error("Failed to update status");
-    }
-  };
-
-  const statusBadge = (status) => {
-    const styles = {
-      approved: "bg-emerald-100 text-emerald-700 border border-emerald-200",
-      rejected: "bg-red-100 text-red-700 border border-red-200",
-      pending: "bg-amber-100 text-amber-700 border border-amber-200",
-    };
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-          styles[status] ?? "bg-gray-100 text-gray-700 border border-gray-200"
-        }`}
-      >
-        {status}
-      </span>
-    );
-  };
+// ─── Event Card ───────────────────────────────────────────────────────────────
+function EventCard({ event, onViewDetails }) {
+  const categoryColor =
+    CATEGORY_COLORS[event.category] || CATEGORY_COLORS.other;
+  const gradient = CATEGORY_GRADIENT[event.category] || CATEGORY_GRADIENT.other;
+  const emoji = CATEGORY_EMOJI[event.category] || "📅";
+  const imageUrl = event.image_url ? `${API_BASE}${event.image_url}` : null;
+  const statusColor =
+    event.status === "published"
+      ? "bg-green-100 text-green-700"
+      : event.status === "ongoing"
+        ? "bg-blue-100 text-blue-700"
+        : event.status === "completed"
+          ? "bg-slate-100 text-slate-600"
+          : "bg-yellow-100 text-yellow-700";
+  const isFull = event.current_participants >= event.max_participants;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Manage Registrations
-            </h1>
-          </div>
-          <p className="text-sm text-gray-500 ml-12">
-            {registrations.length} registration
-            {registrations.length !== 1 ? "s" : ""} found
-          </p>
-        </div>
-
-        {/* Content */}
-        {registrations.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center shadow-sm">
-            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-7 h-7 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                />
-              </svg>
-            </div>
-            <p className="text-gray-500 font-medium">No registrations yet</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Check back once participants sign up.
-            </p>
-          </div>
+    <div
+      className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-200 group cursor-pointer"
+      onClick={() => onViewDetails(event)}
+    >
+      <div
+        className={`relative h-40 bg-gradient-to-br ${gradient} overflow-hidden`}
+      >
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={event.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              e.target.style.display = "none";
+            }}
+          />
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">
-                      User
-                    </th>
-                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">
-                      Email
-                    </th>
-                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">
-                      College
-                    </th>
-                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">
-                      Status
-                    </th>
-                    <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {registrations.map((r) => (
-                    <tr
-                      key={r._id}
-                      className="hover:bg-gray-50 transition-colors duration-150"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                            <span className="text-indigo-600 font-semibold text-xs">
-                              {r.user_id?.name?.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <span className="font-medium text-gray-900">
-                            {r.user_id?.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {r.user_id.email}
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {r.user_id.college}
-                      </td>
-                      <td className="px-6 py-4">{statusBadge(r.status)}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleStatus(r._id, "approved")}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors duration-150"
-                          >
-                            <svg
-                              className="w-3.5 h-3.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleStatus(r._id, "rejected")}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors duration-150"
-                          >
-                            <svg
-                              className="w-3.5 h-3.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                            Reject
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center text-6xl">
+            {emoji}
           </div>
         )}
+        <div className="absolute bottom-3 left-3">
+          <span
+            className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg ${event.registration_fee > 0 ? "bg-orange-500 text-white" : "bg-green-500 text-white"}`}
+          >
+            {event.registration_fee > 0 ? `₹${event.registration_fee}` : "FREE"}
+          </span>
+        </div>
+        {isFull && (
+          <div className="absolute top-3 right-3">
+            <span className="px-2.5 py-1 rounded-full text-xs font-black bg-red-500 text-white">
+              FULL
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${categoryColor}`}
+          >
+            {event.category}
+          </span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${statusColor}`}
+          >
+            {event.status}
+          </span>
+        </div>
+        <h3 className="font-bold text-slate-800 leading-tight mb-1.5 text-sm group-hover:text-indigo-600 transition-colors line-clamp-1">
+          {event.title}
+        </h3>
+        <p className="text-xs text-slate-500 mb-3 line-clamp-2">
+          {event.description}
+        </p>
+        <div className="space-y-1 mb-3">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <FaCalendarAlt className="text-indigo-400 flex-shrink-0" />
+            {new Date(event.start_date).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </div>
+          {event.location && (
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <FaMapMarkerAlt className="text-indigo-400 flex-shrink-0" />
+              <span className="truncate">
+                {event.venue ? `${event.venue}, ` : ""}
+                {event.location}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <FaUsers className="text-indigo-400 flex-shrink-0" />
+            {event.current_participants || 0} / {event.max_participants}{" "}
+            participants
+          </div>
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails(event);
+          }}
+          className="w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl text-xs hover:shadow-md transition-all"
+        >
+          View Details →
+        </button>
       </div>
     </div>
   );
 }
 
-export default ManageRegistrations;
+// ─── Event Modal ──────────────────────────────────────────────────────────────
+function EventModal({ event, onClose, onToast }) {
+  const [registering, setRegistering] = useState(false);
+  const user = getUser();
+
+  if (!event) return null;
+
+  const gradient = CATEGORY_GRADIENT[event.category] || CATEGORY_GRADIENT.other;
+  const emoji = CATEGORY_EMOJI[event.category] || "📅";
+  const imageUrl = event.image_url ? `${API_BASE}${event.image_url}` : null;
+  const isFull = event.current_participants >= event.max_participants;
+  const isCompleted =
+    event.status === "completed" || event.status === "cancelled";
+  const now = new Date();
+  const regDeadlinePassed =
+    event.registration_end && new Date(event.registration_end) < now;
+
+  // ✅ FIXED: calls POST /registrations/register with correct body
+  const handleRegister = async () => {
+    if (!user) {
+      onToast("Please login to register for events", "error");
+      return;
+    }
+    try {
+      setRegistering(true);
+      await api.post("/registrations/register", { event_id: event._id });
+      onToast(
+        "Registered successfully! Awaiting admin approval. ✅",
+        "success",
+      );
+      onClose();
+    } catch (err) {
+      const msg = err.response?.data?.message || "Registration failed";
+      onToast(msg, "error");
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const canRegister = !isFull && !isCompleted && !regDeadlinePassed;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className={`h-52 relative bg-gradient-to-br ${gradient} overflow-hidden`}
+        >
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={event.title}
+              className="w-full h-full object-cover"
+              onError={(e) => (e.target.style.display = "none")}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-7xl">
+              {emoji}
+            </div>
+          )}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-9 h-9 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/50 transition"
+          >
+            <FaTimes />
+          </button>
+          <div className="absolute bottom-3 left-3 flex gap-2">
+            <span
+              className={`px-2.5 py-1 rounded-full text-xs font-black shadow ${event.registration_fee > 0 ? "bg-orange-500 text-white" : "bg-green-500 text-white"}`}
+            >
+              {event.registration_fee > 0
+                ? `₹${event.registration_fee}`
+                : "FREE"}
+            </span>
+            {isFull && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-red-500 text-white">
+                FULL
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${CATEGORY_COLORS[event.category] || CATEGORY_COLORS.other}`}
+            >
+              {event.category}
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 capitalize">
+              {event.status}
+            </span>
+            {event.certificates && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                🏅 Certificate
+              </span>
+            )}
+          </div>
+
+          <h2 className="text-2xl font-black text-slate-800 mb-4">
+            {event.title}
+          </h2>
+
+          <div className="grid grid-cols-2 gap-4 mb-5 p-4 bg-slate-50 rounded-xl">
+            <div>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">
+                Start
+              </p>
+              <p className="font-semibold text-slate-700 text-sm">
+                {new Date(event.start_date).toLocaleString("en-IN")}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">
+                End
+              </p>
+              <p className="font-semibold text-slate-700 text-sm">
+                {new Date(event.end_date).toLocaleString("en-IN")}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">
+                Location
+              </p>
+              <p className="font-semibold text-slate-700 text-sm">
+                {event.venue ? `${event.venue}, ` : ""}
+                {event.location}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">
+                Participants
+              </p>
+              <p className="font-semibold text-slate-700 text-sm">
+                {event.current_participants || 0} / {event.max_participants}
+              </p>
+            </div>
+            {event.registration_end && (
+              <div className="col-span-2">
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">
+                  Registration Deadline
+                </p>
+                <p
+                  className={`font-semibold text-sm ${regDeadlinePassed ? "text-red-500" : "text-slate-700"}`}
+                >
+                  {new Date(event.registration_end).toLocaleString("en-IN")}
+                  {regDeadlinePassed && " (Closed)"}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <h4 className="font-bold text-slate-800 mb-2">About this Event</h4>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {event.description}
+            </p>
+          </div>
+
+          {event.tags?.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-bold text-slate-800 mb-2">Tags</h4>
+              <div className="flex flex-wrap gap-2">
+                {event.tags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {event.eligibility && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <h4 className="font-bold text-green-800 mb-1 text-sm">
+                ✅ Eligibility
+              </h4>
+              <p className="text-sm text-green-700">{event.eligibility}</p>
+            </div>
+          )}
+
+          {event.requirements && (
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <h4 className="font-bold text-amber-800 mb-1 text-sm">
+                📋 Requirements
+              </h4>
+              <p className="text-sm text-amber-700">{event.requirements}</p>
+            </div>
+          )}
+
+          {/* Register Button */}
+          <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+            <div className="flex-1">
+              <p className="text-xs text-slate-400">Registration Fee</p>
+              <p className="font-black text-lg text-indigo-600">
+                {event.registration_fee > 0
+                  ? `₹${event.registration_fee}`
+                  : "FREE"}
+              </p>
+            </div>
+            {canRegister ? (
+              <button
+                onClick={handleRegister}
+                disabled={registering}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-60"
+              >
+                {registering ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <FaTicketAlt />
+                )}
+                {registering ? "Registering..." : "Register Now"}
+              </button>
+            ) : (
+              <span className="px-6 py-3 bg-slate-100 text-slate-500 font-bold rounded-xl text-sm">
+                {isFull
+                  ? "Event Full"
+                  : isCompleted
+                    ? "Event Ended"
+                    : "Registration Closed"}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+function StudentEvents() {
+  const [events, setEvents] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [eventType, setEventType] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
+  const [feeFilter, setFeeFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("date_asc");
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showFilters, setShowFilters] = useState(true);
+  const [collegeFilter, setCollegeFilter] = useState("");
+  const [colleges, setColleges] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  useEffect(() => {
+    api
+      .get("/events")
+      .then((r) => {
+        const evts = r.data.events || [];
+        setEvents(evts);
+        const unique = [
+          ...new Map(
+            evts.map((e) => [
+              e.college_id,
+              { id: e.college_id, name: e.college_name || e.college_id },
+            ]),
+          ).values(),
+        ].filter((c) => c.id);
+        setColleges(unique);
+      })
+      .catch(() => showToast("Failed to load events", "error"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    let result = [...events];
+    const now = new Date();
+
+    if (search)
+      result = result.filter(
+        (e) =>
+          e.title.toLowerCase().includes(search.toLowerCase()) ||
+          e.description?.toLowerCase().includes(search.toLowerCase()) ||
+          e.location?.toLowerCase().includes(search.toLowerCase()) ||
+          e.tags?.some((t) => t.toLowerCase().includes(search.toLowerCase())),
+      );
+    if (category !== "all")
+      result = result.filter((e) => e.category === category);
+    if (status !== "all") result = result.filter((e) => e.status === status);
+    if (eventType !== "all")
+      result = result.filter((e) => e.event_type === eventType);
+    if (feeFilter === "free")
+      result = result.filter(
+        (e) => !e.registration_fee || e.registration_fee === 0,
+      );
+    if (feeFilter === "paid")
+      result = result.filter((e) => e.registration_fee > 0);
+    if (collegeFilter)
+      result = result.filter((e) => e.college_id === collegeFilter);
+    if (dateFilter === "today")
+      result = result.filter(
+        (e) => new Date(e.start_date).toDateString() === now.toDateString(),
+      );
+    if (dateFilter === "week") {
+      const end = new Date(now);
+      end.setDate(end.getDate() + 7);
+      result = result.filter(
+        (e) => new Date(e.start_date) >= now && new Date(e.start_date) <= end,
+      );
+    }
+    if (dateFilter === "month") {
+      const end = new Date(now);
+      end.setMonth(end.getMonth() + 1);
+      result = result.filter(
+        (e) => new Date(e.start_date) >= now && new Date(e.start_date) <= end,
+      );
+    }
+
+    if (sortBy === "date_asc")
+      result.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    if (sortBy === "date_desc")
+      result.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+    if (sortBy === "name_asc")
+      result.sort((a, b) => a.title.localeCompare(b.title));
+    if (sortBy === "participants")
+      result.sort(
+        (a, b) => (b.current_participants || 0) - (a.current_participants || 0),
+      );
+
+    setFiltered(result);
+  }, [
+    events,
+    search,
+    category,
+    status,
+    eventType,
+    dateFilter,
+    feeFilter,
+    sortBy,
+    collegeFilter,
+  ]);
+
+  const clearFilters = () => {
+    setSearch("");
+    setCategory("all");
+    setStatus("all");
+    setEventType("all");
+    setDateFilter("");
+    setFeeFilter("all");
+    setSortBy("date_asc");
+    setCollegeFilter("");
+  };
+  const activeFilterCount = [
+    category !== "all",
+    status !== "all",
+    eventType !== "all",
+    dateFilter !== "",
+    feeFilter !== "all",
+    collegeFilter !== "",
+  ].filter(Boolean).length;
+
+  return (
+    <>
+      <Navbar />
+      <Toast toast={toast} />
+
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-10 px-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-3xl font-black mb-1">Discover Events</h1>
+            <p className="text-indigo-200 text-sm">
+              Find and register for inter-college events near you
+            </p>
+            <div className="mt-5 relative max-w-2xl">
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, location, or tag..."
+                className="w-full pl-11 pr-4 py-3 rounded-xl border-none outline-none text-slate-800 text-sm shadow-lg"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <FaTimes />
+                </button>
+              )}
+            </div>
+            <div className="mt-4 flex gap-2 flex-wrap">
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all capitalize ${category === c ? "bg-white text-indigo-700 shadow-md" : "bg-white/20 text-white hover:bg-white/30"}`}
+                >
+                  {c === "all" ? "🌟 All" : `${CATEGORY_EMOJI[c]} ${c}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${showFilters ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-200"}`}
+            >
+              <FaFilter />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center font-black">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-500 font-medium">
+                {loading
+                  ? "Loading..."
+                  : `${filtered.length} event${filtered.length !== 1 ? "s" : ""} found`}
+              </span>
+              <div className="relative">
+                <FaSortAmountDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="pl-8 pr-3 py-2 border-2 border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500 bg-white text-slate-700 appearance-none"
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {showFilters && (
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-bold text-slate-700 text-sm flex items-center gap-2">
+                  <FaFilter className="text-indigo-500" /> Advanced Filters
+                </span>
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={clearFilters}
+                    className="flex items-center gap-1 text-xs text-red-500 font-semibold hover:text-red-700"
+                  >
+                    <FaTimes /> Clear All
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {[
+                  {
+                    label: "Category",
+                    value: category,
+                    onChange: setCategory,
+                    options: CATEGORIES.map((c) => ({
+                      value: c,
+                      label:
+                        c === "all"
+                          ? "All Categories"
+                          : c.charAt(0).toUpperCase() + c.slice(1),
+                    })),
+                  },
+                  {
+                    label: "Status",
+                    value: status,
+                    onChange: setStatus,
+                    options: STATUSES.map((s) => ({
+                      value: s,
+                      label:
+                        s === "all"
+                          ? "All Status"
+                          : s.charAt(0).toUpperCase() + s.slice(1),
+                    })),
+                  },
+                  {
+                    label: "Mode",
+                    value: eventType,
+                    onChange: setEventType,
+                    options: EVENT_TYPES.map((t) => ({
+                      value: t,
+                      label:
+                        t === "all"
+                          ? "All Modes"
+                          : t === "online"
+                            ? "🌐 Online"
+                            : t === "hybrid"
+                              ? "🔀 Hybrid"
+                              : "📍 Offline",
+                    })),
+                  },
+                  {
+                    label: "Date",
+                    value: dateFilter,
+                    onChange: setDateFilter,
+                    options: DATE_FILTERS.map((d) => ({
+                      value: d.value,
+                      label: d.label,
+                    })),
+                  },
+                  {
+                    label: "Fee",
+                    value: feeFilter,
+                    onChange: setFeeFilter,
+                    options: FEE_FILTERS.map((f) => ({
+                      value: f.value,
+                      label: f.label,
+                    })),
+                  },
+                  {
+                    label: "College",
+                    value: collegeFilter,
+                    onChange: setCollegeFilter,
+                    options: [
+                      { value: "", label: "All Colleges" },
+                      ...colleges.map((c) => ({ value: c.id, label: c.name })),
+                    ],
+                  },
+                ].map(({ label, value, onChange, options }) => (
+                  <div key={label}>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
+                      {label}
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
+                      >
+                        {options.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                      <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm"
+                >
+                  <div className="h-40 bg-slate-200 animate-pulse" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-3 bg-slate-200 rounded animate-pulse w-1/3" />
+                    <div className="h-4 bg-slate-200 rounded animate-pulse" />
+                    <div className="h-8 bg-slate-200 rounded-xl animate-pulse mt-3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-20 text-slate-400">
+              <div className="text-6xl mb-4">🔍</div>
+              <p className="text-lg font-semibold text-slate-600">
+                No events found
+              </p>
+              <p className="text-sm mt-1">
+                Try adjusting your filters or search terms
+              </p>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 px-5 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition"
+                >
+                  Clear All Filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {filtered.map((event) => (
+                <EventCard
+                  key={event._id}
+                  event={event}
+                  onViewDetails={setSelectedEvent}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selectedEvent && (
+        <EventModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onToast={showToast}
+        />
+      )}
+    </>
+  );
+}
+
+export default StudentEvents;

@@ -35,13 +35,12 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ── Public ── */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/events" element={<StudentEvents />} />
 
-        {/* ── Student ── */}
+        {/* Student */}
         <Route
           path="/student/dashboard"
           element={
@@ -83,7 +82,7 @@ function App() {
           }
         />
 
-        {/* ── Super Admin ── */}
+        {/* Super Admin */}
         <Route
           path="/super-admin/dashboard"
           element={
@@ -149,7 +148,7 @@ function App() {
           }
         />
 
-        {/* ── College Admin ── */}
+        {/* College Admin */}
         <Route
           path="/admin/dashboard"
           element={
@@ -199,7 +198,7 @@ function App() {
           }
         />
 
-        {/* ── 404 ── */}
+        {/* 404 */}
         <Route
           path="*"
           element={

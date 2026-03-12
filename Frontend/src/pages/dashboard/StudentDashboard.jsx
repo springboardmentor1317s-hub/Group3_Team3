@@ -1,228 +1,207 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+// src/pages/dashboard/StudentDashboard.jsx
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import Navbar from "../../components/Navbar";
+import api from "../../services/api";
+import { getUser } from "../../services/auth";
+import {
+  FaCalendarAlt,
+  FaTicketAlt,
+  FaBell,
+  FaUser,
+  FaCheckCircle,
+  FaClock,
+  FaTimesCircle,
+} from "react-icons/fa";
 
-// Student
-import StudentDashboard from "./pages/dashboard/StudentDashboard";
-import StudentNotifications from "./pages/dashboard/StudentNotifications";
-import StudentProfile from "./pages/profiledit/StudentProfile";
-import StudentEvents from "./pages/studentevents/StudentEvents";
-import MyRegistrations from "./pages/studentevents/MyRegistrations";
+function StudentDashboard() {
+  const user = getUser();
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-// College Admin
-import CollegeAdminDashboard from "./pages/dashboard/CollegeAdminDashboard";
-import AdminProfile from "./pages/profiledit/AdminProfile";
-import CreateEvent from "./pages/event/CreateEvent";
-import EditEvent from "./pages/event/EditEvent";
-import CollegeEvents from "./pages/event/CollegeEvents";
-import ManageRegistrations from "./pages/event/ManageRegistrations";
+  useEffect(() => {
+    api
+      .get("/registrations/my")
+      .then((res) => setRegistrations(res.data.registrations || []))
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
 
-// Super Admin
-import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
-import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
-import PendingColleges from "./pages/superadmin/PendingColleges";
-import PendingEvents from "./pages/superadmin/PendingEvents";
-import AllColleges from "./pages/superadmin/AllColleges";
-import CollegeDetails from "./pages/superadmin/CollegeDetails";
-import Analytics from "./pages/superadmin/Analytics";
-import AllEvents from "./pages/superadmin/AllEvents";
+  const approved = registrations.filter((r) => r.status === "approved").length;
+  const pending = registrations.filter((r) => r.status === "pending").length;
+  const rejected = registrations.filter((r) => r.status === "rejected").length;
 
-import Chatbot from "./components/Chatbot";
-import ProtectedRoute from "./components/ProtectedRoute";
-
-function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* ── Public ── */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/events" element={<StudentEvents />} />
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Welcome Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-black text-slate-900">
+              Welcome back, {user?.name?.split(" ")[0] || "Student"} 👋
+            </h1>
+            <p className="text-slate-500 mt-1">{user?.college}</p>
+          </div>
 
-        {/* ── Student ── */}
-        <Route
-          path="/student/dashboard"
-          element={
-            <ProtectedRoute role="student">
-              <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/events"
-          element={
-            <ProtectedRoute role="student">
-              <StudentEvents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/registrations"
-          element={
-            <ProtectedRoute role="student">
-              <MyRegistrations />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/notifications"
-          element={
-            <ProtectedRoute role="student">
-              <StudentNotifications />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/profile"
-          element={
-            <ProtectedRoute role="student">
-              <StudentProfile />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ── Super Admin ── */}
-        <Route
-          path="/super-admin/dashboard"
-          element={
-            <ProtectedRoute role="super_admin">
-              <SuperAdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/profile"
-          element={
-            <ProtectedRoute role="super_admin">
-              <SuperAdminProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/colleges"
-          element={
-            <ProtectedRoute role="super_admin">
-              <AllColleges />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/colleges/:id"
-          element={
-            <ProtectedRoute role="super_admin">
-              <CollegeDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/pending-colleges"
-          element={
-            <ProtectedRoute role="super_admin">
-              <PendingColleges />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/pending-events"
-          element={
-            <ProtectedRoute role="super_admin">
-              <PendingEvents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/reports"
-          element={
-            <ProtectedRoute role="super_admin">
-              <Analytics />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/all-events"
-          element={
-            <ProtectedRoute role="super_admin">
-              <AllEvents />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ── College Admin ── */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute role="college_admin">
-              <CollegeAdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/profile"
-          element={
-            <ProtectedRoute role="college_admin">
-              <AdminProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/create-event"
-          element={
-            <ProtectedRoute role="college_admin">
-              <CreateEvent />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/events"
-          element={
-            <ProtectedRoute role="college_admin">
-              <CollegeEvents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/events/:id"
-          element={
-            <ProtectedRoute role="college_admin">
-              <EditEvent />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/events/:eventId/registrations"
-          element={
-            <ProtectedRoute role="college_admin">
-              <ManageRegistrations />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ── 404 ── */}
-        <Route
-          path="*"
-          element={
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
-              <div className="text-center p-12">
-                <h1 className="text-8xl font-black text-slate-200 mb-4">404</h1>
-                <p className="text-2xl font-bold text-slate-600 mb-8">
-                  Page Not Found
-                </p>
-                <Link
-                  to="/"
-                  className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold hover:shadow-xl transition-all inline-block"
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {[
+              {
+                label: "Total Registrations",
+                value: registrations.length,
+                icon: <FaTicketAlt />,
+                color: "from-indigo-500 to-purple-600",
+              },
+              {
+                label: "Approved",
+                value: approved,
+                icon: <FaCheckCircle />,
+                color: "from-emerald-500 to-teal-600",
+              },
+              {
+                label: "Pending",
+                value: pending,
+                icon: <FaClock />,
+                color: "from-amber-500 to-orange-500",
+              },
+              {
+                label: "Rejected",
+                value: rejected,
+                icon: <FaTimesCircle />,
+                color: "from-red-500 to-rose-600",
+              },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-3xl p-6 shadow border border-slate-100"
+              >
+                <div
+                  className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center text-white mb-3`}
                 >
-                  Go Home
+                  {stat.icon}
+                </div>
+                <p className="text-3xl font-black text-slate-900">
+                  {stat.value}
+                </p>
+                <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid md:grid-cols-3 gap-4 mb-8">
+            <Link
+              to="/student/events"
+              className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl p-6 shadow hover:shadow-xl hover:-translate-y-1 transition-all"
+            >
+              <FaCalendarAlt className="text-3xl mb-3" />
+              <h3 className="text-xl font-black">Browse Events</h3>
+              <p className="text-indigo-200 text-sm mt-1">
+                Discover and register for events
+              </p>
+            </Link>
+            <Link
+              to="/student/registrations"
+              className="bg-white rounded-3xl p-6 shadow border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all"
+            >
+              <FaTicketAlt className="text-3xl text-indigo-500 mb-3" />
+              <h3 className="text-xl font-black text-slate-900">
+                My Registrations
+              </h3>
+              <p className="text-slate-500 text-sm mt-1">
+                Track your event registrations
+              </p>
+            </Link>
+            <Link
+              to="/student/profile"
+              className="bg-white rounded-3xl p-6 shadow border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all"
+            >
+              <FaUser className="text-3xl text-indigo-500 mb-3" />
+              <h3 className="text-xl font-black text-slate-900">My Profile</h3>
+              <p className="text-slate-500 text-sm mt-1">
+                View and edit your profile
+              </p>
+            </Link>
+          </div>
+
+          {/* Recent Registrations */}
+          <div className="bg-white rounded-3xl shadow border border-slate-100 overflow-hidden">
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-xl font-black text-slate-900">
+                Recent Registrations
+              </h2>
+              <Link
+                to="/student/registrations"
+                className="text-indigo-600 font-bold text-sm hover:underline"
+              >
+                View All →
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="p-8 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-14 bg-slate-100 rounded-2xl animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : registrations.length === 0 ? (
+              <div className="p-16 text-center text-slate-400">
+                <FaCalendarAlt className="text-5xl mx-auto mb-4 opacity-30" />
+                <p className="font-semibold">No registrations yet</p>
+                <Link
+                  to="/student/events"
+                  className="inline-block mt-4 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm"
+                >
+                  Browse Events
                 </Link>
               </div>
-            </div>
-          }
-        />
-      </Routes>
-      <Chatbot />
-    </BrowserRouter>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {registrations.slice(0, 5).map((reg) => {
+                  const event = reg.event_id || {};
+                  return (
+                    <div
+                      key={reg._id}
+                      className="px-8 py-4 flex items-center justify-between gap-4"
+                    >
+                      <div>
+                        <p className="font-bold text-slate-900">
+                          {event.title || "Event"}
+                        </p>
+                        <p className="text-xs text-slate-500 capitalize">
+                          {event.category} • {event.location}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          reg.status === "approved"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : reg.status === "rejected"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {reg.status === "approved"
+                          ? "✅ "
+                          : reg.status === "rejected"
+                            ? "❌ "
+                            : "⏳ "}
+                        {reg.status}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
-export default App;
+export default StudentDashboard;
