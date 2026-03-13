@@ -1,150 +1,136 @@
-import { useState } from "react";
+// src/pages/superadmin/AllColleges.jsx
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
+import api from "../../services/api";
 import { FaCircleCheck, FaCircleXmark, FaEye } from "react-icons/fa6";
-function AllColleges() {
-  const [colleges, setColleges] = useState([
-    {
-      id: 1,
-      name: "Madurai Kamaraj University",
-      location: "Madurai, TN",
-      events: 24,
-      students: 1247,
-      revenue: "₹45,200",
-      status: "active",
-      admin: "Dr. Rajesh K",
-      pendingEvents: 3
-    },
-    {
-      id: 2,
-      name: "Thiagarajar College of Engineering",
-      location: "Madurai, TN", 
-      events: 18,
-      students: 892,
-      revenue: "₹32,500",
-      status: "active",
-      admin: "Prof. Kumar S",
-      pendingEvents: 1
-    },
-    {
-      id: 3,
-      name: "VIT Vellore",
-      location: "Vellore, TN",
-      events: 35,
-      students: 2456,
-      revenue: "₹78,900",
-      status: "active",
-      admin: "Dr. Anjali R",
-      pendingEvents: 0
-    }
-  ]);
+import { FaSearch, FaUsers, FaGraduationCap } from "react-icons/fa";
 
-  const approveCollege = (id) => {
-    setColleges(colleges.map(c => c.id === id ? { ...c, status: "active" } : c));
-  };
+function AllColleges() {
+  const [colleges, setColleges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    // Fetch all college_admin users — each represents a college
+    api
+      .get("/users?role=college_admin")
+      .then((res) => {
+        const users = res.data.users || res.data || [];
+        // Group by college name
+        const collegeMap = {};
+        users.forEach((u) => {
+          if (!collegeMap[u.college]) {
+            collegeMap[u.college] = {
+              id: u._id,
+              name: u.college,
+              admin: u.name,
+              email: u.email,
+              status: "active",
+            };
+          }
+        });
+        setColleges(Object.values(collegeMap));
+      })
+      .catch((err) => console.error("Failed to load colleges", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = colleges.filter((c) =>
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
       <Navbar />
-      
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
+        <div className="flex items-center justify-between mb-10 flex-wrap gap-4">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 mb-2">All Colleges</h1>
-            <p className="text-xl text-slate-600">Manage 47 active colleges</p>
+            <h1 className="text-4xl font-black text-slate-900 mb-1">
+              All Colleges
+            </h1>
+            <p className="text-slate-500">
+              Colleges registered on the platform
+            </p>
           </div>
-          <Link to="/super-admin/pending-colleges" className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all">
-            Pending Colleges (5)
+          <Link
+            to="/super-admin/pending-colleges"
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all"
+          >
+            Pending Colleges
           </Link>
         </div>
 
-        {/* College Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
-            <div className="text-4xl mb-3">🏫</div>
-            <div className="text-3xl font-black text-indigo-700">47</div>
-            <p className="text-slate-600 font-semibold">Active Colleges</p>
-          </div>
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
-            <div className="text-4xl mb-3">🎉</div>
-            <div className="text-3xl font-black text-purple-700">1,247</div>
-            <p className="text-slate-600 font-semibold">Total Events</p>
-          </div>
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
-            <div className="text-4xl mb-3">👥</div>
-            <div className="text-3xl font-black text-emerald-700">24,500</div>
-            <p className="text-slate-600 font-semibold">Total Students</p>
+        {/* Search */}
+        <div className="bg-white/80 rounded-3xl p-5 shadow border border-white/50 mb-8">
+          <div className="relative max-w-md">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search colleges..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-200 outline-none"
+            />
           </div>
         </div>
 
-        {/* Colleges Table */}
-        <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-          <div className="p-8 border-b border-slate-200">
-            <h3 className="text-2xl font-bold text-slate-900">College Directory</h3>
+        {/* List */}
+        <div className="bg-white rounded-3xl shadow border border-slate-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 text-white">
+            <h2 className="text-2xl font-black flex items-center gap-3">
+              <FaGraduationCap /> Colleges ({filtered.length})
+            </h2>
           </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-indigo-100">
-                  <th className="p-6 text-left font-bold text-slate-800 text-lg">College</th>
-                  <th className="p-6 text-center font-bold text-slate-800 text-lg">Events</th>
-                  <th className="p-6 text-center font-bold text-slate-800 text-lg">Students</th>
-                  <th className="p-6 text-center font-bold text-slate-800 text-lg">Revenue</th>
-                  <th className="p-6 text-center font-bold text-slate-800 text-lg">Status</th>
-                  <th className="p-6 text-center font-bold text-slate-800 text-lg">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {colleges.map((college) => (
-                  <tr key={college.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="p-6 font-semibold text-slate-900">
-                      <div>
-                        <div className="font-bold text-xl">{college.name}</div>
-                        <div className="text-sm text-slate-500">{college.location}</div>
-                        <div className="text-xs text-slate-400">Admin: {college.admin}</div>
-                      </div>
-                    </td>
-                    <td className="p-6 text-center">
-                      <div className="font-bold text-2xl text-purple-600">{college.events}</div>
-                      <div className="text-sm text-slate-500">{college.pendingEvents} pending</div>
-                    </td>
-                    <td className="p-6 text-center font-bold text-2xl text-emerald-600">{college.students.toLocaleString()}</td>
-                    <td className="p-6 text-center font-bold text-xl text-amber-600">{college.revenue}</td>
-                    <td className="p-6 text-center">
-                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${
-                        college.status === 'active' 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-orange-100 text-orange-800'
-                      }`}>
-                        {college.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="p-6 text-center">
-                      <div className="flex items-center gap-2 justify-center">
-                        <Link 
-                          to={`/super-admin/colleges/${college.id}`}
-                          className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-xl transition-all"
-                          title="View Details"
-                        >
-                          <FaEye />
-                        </Link>
-                        {college.status !== 'active' && (
-                          <button
-                            onClick={() => approveCollege(college.id)}
-                            className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all"
-                          >
-                            <FaCheckCircle />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+          {loading ? (
+            <div className="p-8 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-20 bg-slate-100 rounded-2xl animate-pulse"
+                />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-20 text-slate-400">
+              <FaGraduationCap className="text-7xl mx-auto mb-4 opacity-20" />
+              <p className="text-xl font-bold">No colleges found</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {filtered.map((college) => (
+                <div
+                  key={college.id}
+                  className="px-8 py-5 hover:bg-slate-50 flex items-center justify-between gap-4 flex-wrap"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                      {college.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900">{college.name}</p>
+                      <p className="text-sm text-slate-500">
+                        Admin: {college.admin} • {college.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                      <FaCircleCheck /> Active
+                    </span>
+                    <Link
+                      to={`/super-admin/colleges/${college.id}`}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-xl font-bold text-sm hover:bg-indigo-200 transition-all"
+                    >
+                      <FaEye /> View
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

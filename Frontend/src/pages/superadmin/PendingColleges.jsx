@@ -1,169 +1,142 @@
-import { useState } from "react";
+// src/pages/superadmin/PendingColleges.jsx
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
-import { FaCircleCheck, FaCircleXmark, FaEye, FaCalendarDays, FaMapLocationDot } from "react-icons/fa6";
-function PendingColleges() {
-  const [pendingColleges, setPendingColleges] = useState([
-    {
-      id: 1,
-      name: "St. Joseph's College",
-      location: "Tiruchirappalli, TN",
-      admin: "Dr. Maria Thomas",
-      email: "maria@stjosephs.ac.in",
-      events: 0,
-      students: 0,
-      appliedDate: "Feb 20, 2026",
-      documents: "Verified ✅"
-    },
-    {
-      id: 2,
-      name: "Bharathidasan University",
-      location: "Tiruchirappalli, TN", 
-      admin: "Prof. Ravi Shankar",
-      email: "ravi@bdu.ac.in",
-      events: 0,
-      students: 0,
-      appliedDate: "Feb 22, 2026",
-      documents: "Pending"
-    },
-    {
-      id: 3,
-      name: "Kalasalingam Academy",
-      location: "Virudhunagar, TN",
-      admin: "Dr. Priya S",
-      email: "priya@kalasalingam.ac.in",
-      events: 0,
-      students: 0,
-      appliedDate: "Feb 23, 2026",
-      documents: "Verified ✅"
-    }
-  ]);
+import api from "../../services/api";
+import { FaCircleCheck, FaCircleXmark, FaCalendarDays } from "react-icons/fa6";
+import { FaGraduationCap, FaEnvelope } from "react-icons/fa";
+import { toast } from "react-toastify";
 
-  const approveCollege = (id) => {
-    setPendingColleges(prev => prev.filter(c => c.id !== id));
+function PendingColleges() {
+  const [pendingAdmins, setPendingAdmins] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Pending colleges = college_admin users who registered but aren't verified yet
+  // We fetch all college_admin users and show them here for super admin review
+  const fetchPendingAdmins = async () => {
+    try {
+      const res = await api.get("/users");
+      const users = res.data.users || res.data || [];
+      // Show college_admin users as "pending" colleges needing review
+      const admins = users.filter((u) => u.role === "college_admin");
+      setPendingAdmins(admins);
+    } catch (err) {
+      console.error("Failed to load pending colleges", err);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const rejectCollege = (id) => {
-    setPendingColleges(prev => prev.map(c => 
-      c.id === id ? { ...c, status: 'rejected' } : c
-    ));
+  useEffect(() => {
+    fetchPendingAdmins();
+  }, []);
+
+  const approveAdmin = async (id) => {
+    try {
+      // Mark the admin as active/approved — update their profile
+      await api.put(`/users/${id}`, { status: "active" });
+      toast.success("✅ College approved!");
+      fetchPendingAdmins();
+    } catch (err) {
+      toast.error("Failed to approve college");
+    }
+  };
+
+  const rejectAdmin = async (id) => {
+    try {
+      await api.delete(`/users/${id}`);
+      toast.success("College admin removed.");
+      fetchPendingAdmins();
+    } catch (err) {
+      toast.error("Failed to reject college");
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
       <Navbar />
-      
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
+        <div className="flex items-center justify-between mb-10 flex-wrap gap-4">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 mb-2">Pending Colleges</h1>
-            <p className="text-xl text-slate-600">Review new college registrations (5 pending)</p>
+            <h1 className="text-4xl font-black text-slate-900 mb-1">
+              Pending Colleges
+            </h1>
+            <p className="text-slate-500">
+              College admins registered and awaiting review
+            </p>
           </div>
-          <Link to="/super-admin/colleges" className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl">
-            View All Colleges →
+          <Link
+            to="/super-admin/colleges"
+            className="px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-slate-50 transition-all"
+          >
+            ← All Colleges
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
-            <div className="text-4xl mb-3 text-orange-500">⏳</div>
-            <div className="text-3xl font-black text-orange-700">5</div>
-            <p className="text-slate-600 font-semibold">Pending Approval</p>
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-28 bg-white rounded-3xl shadow animate-pulse"
+              />
+            ))}
           </div>
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
-            <div className="text-4xl mb-3 text-emerald-500">✅</div>
-            <div className="text-3xl font-black text-emerald-700">42</div>
-            <p className="text-slate-600 font-semibold">Active Colleges</p>
+        ) : pendingAdmins.length === 0 ? (
+          <div className="text-center py-24 text-slate-400">
+            <FaCircleCheck className="text-7xl mx-auto mb-4 opacity-20" />
+            <h3 className="text-2xl font-bold mb-2">No pending colleges</h3>
+            <p>All colleges have been reviewed</p>
           </div>
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
-            <div className="text-4xl mb-3 text-red-500">❌</div>
-            <div className="text-3xl font-black text-red-700">0</div>
-            <p className="text-slate-600 font-semibold">Rejected</p>
-          </div>
-        </div>
-
-        {/* Pending Colleges Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {pendingColleges.map((college) => (
-            <div key={college.id} className="bg-white rounded-3xl shadow-2xl hover:shadow-3xl border border-orange-100 overflow-hidden group">
-              {/* College Header */}
-              <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 text-white">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                    <FaUniversity className="text-2xl" />
+        ) : (
+          <div className="space-y-5">
+            {pendingAdmins.map((admin) => (
+              <div
+                key={admin._id}
+                className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 hover:shadow-2xl transition-all"
+              >
+                <div className="flex items-start justify-between gap-6 flex-wrap">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl flex items-center justify-center text-white font-black text-xl flex-shrink-0">
+                      {admin.college?.charAt(0).toUpperCase() || "C"}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-slate-900">
+                        {admin.college}
+                      </h3>
+                      <p className="text-slate-600 flex items-center gap-2 text-sm mt-1">
+                        <FaGraduationCap className="text-indigo-500" />{" "}
+                        {admin.name}
+                      </p>
+                      <p className="text-slate-500 flex items-center gap-2 text-sm">
+                        <FaEnvelope className="text-pink-500" /> {admin.email}
+                      </p>
+                      <p className="text-slate-400 text-xs mt-1 flex items-center gap-1">
+                        <FaCalendarDays /> Joined{" "}
+                        {new Date(admin.createdAt).toLocaleDateString("en-IN")}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold">{college.name}</h3>
-                    <p className="text-orange-100">{college.location}</p>
+
+                  <div className="flex gap-3 flex-shrink-0">
+                    <button
+                      onClick={() => approveAdmin(admin._id)}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                    >
+                      <FaCircleCheck /> Approve
+                    </button>
+                    <button
+                      onClick={() => rejectAdmin(admin._id)}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                    >
+                      <FaCircleXmark /> Reject
+                    </button>
                   </div>
                 </div>
               </div>
-
-              {/* College Details */}
-              <div className="p-8">
-                <div className="space-y-4 mb-8">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-600">Admin</span>
-                    <span className="font-semibold text-slate-900">{college.admin}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-600">Email</span>
-                    <span className="font-semibold text-indigo-600">{college.email}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-600">Applied</span>
-                    <span className="text-sm text-slate-500">{college.appliedDate}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-600">Documents</span>
-                    <span className={`text-sm font-semibold ${
-                      college.documents === 'Verified ✅' 
-                        ? 'text-emerald-600' 
-                        : 'text-orange-600'
-                    }`}>
-                      {college.documents}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-6 border-t border-slate-200">
-                  <Link
-                    to={`/super-admin/colleges/${college.id}`}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-semibold hover:shadow-xl transition-all"
-                  >
-                    <FaEye /> View Details
-                  </Link>
-                  <button
-                    onClick={() => approveCollege(college.id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-semibold hover:shadow-xl transition-all"
-                  >
-                    <FaCheckCircle /> Approve
-                  </button>
-                  <button
-                    onClick={() => rejectCollege(college.id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl font-semibold hover:shadow-xl transition-all"
-                  >
-                    <FaTimesCircle /> Reject
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {pendingColleges.length === 0 && (
-          <div className="text-center py-24">
-            <div className="w-24 h-24 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <FaCheckCircle className="text-4xl text-emerald-600" />
-            </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-4">No pending colleges!</h3>
-            <p className="text-xl text-slate-600 mb-8">All college registrations are approved</p>
-            <Link to="/super-admin/colleges" className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold">
-              View All Colleges
-            </Link>
+            ))}
           </div>
         )}
       </div>

@@ -1,5 +1,7 @@
 import Registration from '../models/Registration.js';
 import Event from '../models/Event.js';
+import { createLog } from './adminLog.controller.js';
+import { createNotification } from './notification.controller.js';
 
 /* Student registers for an event */
 export const registerForEvent = async (req, res) => {
@@ -25,6 +27,15 @@ export const registerForEvent = async (req, res) => {
       user_id: req.user._id,
       status: 'pending'
     });
+
+    // Notify student that registration is pending
+    await createNotification(
+      req.user._id,
+      'registration_pending',
+      'Registration Submitted',
+      `Your registration for "${event.title}" has been submitted and is awaiting approval.`,
+      event_id
+    );
 
     res.status(201).json({ success: true, message: 'Registered successfully! Awaiting admin approval.', registration });
   } catch (error) {
@@ -75,7 +86,36 @@ export const updateRegistrationStatus = async (req, res) => {
       if (event) await event.removeParticipant();
     }
 
+    // Send notification to student
+    const event = await Event.findById(registration.event_id);
+    if (status === 'approved') {
+      await createNotification(
+        registration.user_id,
+        'registration_approved',
+        'Registration Approved! 🎉',
+        `Your registration for "${event?.title}" has been approved! See you there.`,
+        registration.event_id
+      );
+    } else if (status === 'rejected') {
+      await createNotification(
+        registration.user_id,
+        'registration_rejected',
+        'Registration Rejected',
+        `Your registration for "${event?.title}" was not approved. Please contact the organizer.`,
+        registration.event_id
+      );
+    }
+
     res.json({ success: true, message: `Registration ${status}`, registration });
+
+    // Log admin action
+    await createLog(
+      req.user._id,
+      `${status.charAt(0).toUpperCase() + status.slice(1)} registration ${req.params.id}`,
+      'registration',
+      req.params.id,
+      req.ip
+    );
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server Error' });
