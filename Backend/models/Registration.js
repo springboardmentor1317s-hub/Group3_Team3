@@ -1,20 +1,43 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
-const registrationSchema = new mongoose.Schema({
-  eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
-  studentName: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: String,
-  college: { type: String, required: true },
-  status: { 
-    type: String, 
-    enum: ['pending', 'approved', 'rejected'], 
-    default: 'pending' 
-  },
-  approvedAt: Date,
-  rejectedAt: Date,
-  rejectionReason: String,
-}, { timestamps: true });
+const registrationSchema = new mongoose.Schema(
+{
+    event_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Event",
+        required: true
+    },
 
-module.exports = mongoose.model('Registration', registrationSchema);
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+
+    status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending"
+    },
+
+    timestamp: {
+        type: Date,
+        default: Date.now
+    }
+},
+{
+    timestamps: true,
+    collection: "registrations"
+}
+);
+
+// Prevent duplicate registration
+registrationSchema.index({ event_id: 1, user_id: 1 }, { unique: true });
+
+// Faster queries
+registrationSchema.index({ event_id: 1 });
+registrationSchema.index({ user_id: 1 });
+
+const Registration = mongoose.model("Registration", registrationSchema);
+
+export default Registration;

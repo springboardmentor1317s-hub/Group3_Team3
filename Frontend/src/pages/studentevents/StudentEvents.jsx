@@ -1,7 +1,9 @@
+// src/pages/studentevents/StudentEvents.jsx
+// ✅ FIXED: Register Now button wired to backend POST /registrations/register
 import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import api from "../../services/api";
-import { toast } from "react-toastify";
+import { getUser } from "../../services/auth";
 import {
   FaSearch,
   FaFilter,
@@ -58,7 +60,6 @@ const CATEGORY_GRADIENT = {
   technical: "from-violet-500 to-purple-600",
   other: "from-indigo-500 to-purple-600",
 };
-
 const CATEGORY_EMOJI = {
   hackathon: "💻",
   cultural: "🎭",
@@ -69,7 +70,6 @@ const CATEGORY_EMOJI = {
   technical: "⚙️",
   other: "📅",
 };
-
 const CATEGORY_COLORS = {
   hackathon: "bg-blue-100 text-blue-700",
   cultural: "bg-pink-100 text-pink-700",
@@ -81,13 +81,30 @@ const CATEGORY_COLORS = {
   other: "bg-slate-100 text-slate-600",
 };
 
+// ─── Toast ───────────────────────────────────────────────────────────────────
+function Toast({ toast }) {
+  if (!toast) return null;
+  const bg = {
+    success: "bg-emerald-500",
+    error: "bg-red-500",
+    info: "bg-indigo-500",
+  };
+  return (
+    <div
+      className={`fixed top-5 right-5 z-[100] px-6 py-3 rounded-2xl shadow-2xl font-bold text-white transition-all ${bg[toast.type] || bg.info}`}
+    >
+      {toast.msg}
+    </div>
+  );
+}
+
+// ─── Event Card ───────────────────────────────────────────────────────────────
 function EventCard({ event, onViewDetails }) {
   const categoryColor =
     CATEGORY_COLORS[event.category] || CATEGORY_COLORS.other;
   const gradient = CATEGORY_GRADIENT[event.category] || CATEGORY_GRADIENT.other;
   const emoji = CATEGORY_EMOJI[event.category] || "📅";
   const imageUrl = event.image_url ? `${API_BASE}${event.image_url}` : null;
-
   const statusColor =
     event.status === "published"
       ? "bg-green-100 text-green-700"
@@ -96,6 +113,7 @@ function EventCard({ event, onViewDetails }) {
         : event.status === "completed"
           ? "bg-slate-100 text-slate-600"
           : "bg-yellow-100 text-yellow-700";
+  const isFull = event.current_participants >= event.max_participants;
 
   return (
     <div
@@ -121,26 +139,19 @@ function EventCard({ event, onViewDetails }) {
         )}
         <div className="absolute bottom-3 left-3">
           <span
-            className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg
-            ${event.registration_fee > 0 ? "bg-orange-500 text-white" : "bg-green-500 text-white"}`}
+            className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg ${event.registration_fee > 0 ? "bg-orange-500 text-white" : "bg-green-500 text-white"}`}
           >
             {event.registration_fee > 0 ? `₹${event.registration_fee}` : "FREE"}
           </span>
         </div>
-        {event.event_type && (
-          <div className="absolute bottom-3 right-3">
-            <span className="px-2 py-0.5 rounded-full text-xs font-semibold capitalize bg-white/90 text-slate-700">
-              {event.event_type === "online"
-                ? "🌐"
-                : event.event_type === "hybrid"
-                  ? "🔀"
-                  : "📍"}{" "}
-              {event.event_type}
+        {isFull && (
+          <div className="absolute top-3 right-3">
+            <span className="px-2.5 py-1 rounded-full text-xs font-black bg-red-500 text-white">
+              FULL
             </span>
           </div>
         )}
       </div>
-
       <div className="p-4">
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <span
@@ -154,14 +165,12 @@ function EventCard({ event, onViewDetails }) {
             {event.status}
           </span>
         </div>
-
         <h3 className="font-bold text-slate-800 leading-tight mb-1.5 text-sm group-hover:text-indigo-600 transition-colors line-clamp-1">
           {event.title}
         </h3>
         <p className="text-xs text-slate-500 mb-3 line-clamp-2">
           {event.description}
         </p>
-
         <div className="space-y-1 mb-3">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <FaCalendarAlt className="text-indigo-400 flex-shrink-0" />
@@ -186,20 +195,6 @@ function EventCard({ event, onViewDetails }) {
             participants
           </div>
         </div>
-
-        {event.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {event.tags.slice(0, 3).map((tag, i) => (
-              <span
-                key={i}
-                className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-xs"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -214,11 +209,46 @@ function EventCard({ event, onViewDetails }) {
   );
 }
 
-function EventModal({ event, onClose }) {
+// ─── Event Modal ──────────────────────────────────────────────────────────────
+function EventModal({ event, onClose, onToast }) {
+  const [registering, setRegistering] = useState(false);
+  const user = getUser();
+
   if (!event) return null;
+
   const gradient = CATEGORY_GRADIENT[event.category] || CATEGORY_GRADIENT.other;
   const emoji = CATEGORY_EMOJI[event.category] || "📅";
   const imageUrl = event.image_url ? `${API_BASE}${event.image_url}` : null;
+  const isFull = event.current_participants >= event.max_participants;
+  const isCompleted =
+    event.status === "completed" || event.status === "cancelled";
+  const now = new Date();
+  const regDeadlinePassed =
+    event.registration_end && new Date(event.registration_end) < now;
+
+  // ✅ FIXED: calls POST /registrations/register with correct body
+  const handleRegister = async () => {
+    if (!user) {
+      onToast("Please login to register for events", "error");
+      return;
+    }
+    try {
+      setRegistering(true);
+      await api.post("/registrations/register", { event_id: event._id });
+      onToast(
+        "Registered successfully! Awaiting admin approval. ✅",
+        "success",
+      );
+      onClose();
+    } catch (err) {
+      const msg = err.response?.data?.message || "Registration failed";
+      onToast(msg, "error");
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const canRegister = !isFull && !isCompleted && !regDeadlinePassed;
 
   return (
     <div
@@ -252,21 +282,15 @@ function EventModal({ event, onClose }) {
           </button>
           <div className="absolute bottom-3 left-3 flex gap-2">
             <span
-              className={`px-2.5 py-1 rounded-full text-xs font-black shadow
-              ${event.registration_fee > 0 ? "bg-orange-500 text-white" : "bg-green-500 text-white"}`}
+              className={`px-2.5 py-1 rounded-full text-xs font-black shadow ${event.registration_fee > 0 ? "bg-orange-500 text-white" : "bg-green-500 text-white"}`}
             >
               {event.registration_fee > 0
                 ? `₹${event.registration_fee}`
                 : "FREE"}
             </span>
-            {event.event_type && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-slate-700 capitalize">
-                {event.event_type === "online"
-                  ? "🌐"
-                  : event.event_type === "hybrid"
-                    ? "🔀"
-                    : "📍"}{" "}
-                {event.event_type}
+            {isFull && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-red-500 text-white">
+                FULL
               </span>
             )}
           </div>
@@ -332,8 +356,11 @@ function EventModal({ event, onClose }) {
                 <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">
                   Registration Deadline
                 </p>
-                <p className="font-semibold text-slate-700 text-sm">
+                <p
+                  className={`font-semibold text-sm ${regDeadlinePassed ? "text-red-500" : "text-slate-700"}`}
+                >
                   {new Date(event.registration_end).toLocaleString("en-IN")}
+                  {regDeadlinePassed && " (Closed)"}
                 </p>
               </div>
             )}
@@ -380,17 +407,7 @@ function EventModal({ event, onClose }) {
             </div>
           )}
 
-          {event.rules_and_regulations && (
-            <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-              <h4 className="font-bold text-slate-700 mb-1 text-sm">
-                📜 Rules & Regulations
-              </h4>
-              <p className="text-sm text-slate-600">
-                {event.rules_and_regulations}
-              </p>
-            </div>
-          )}
-
+          {/* Register Button */}
           <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
             <div className="flex-1">
               <p className="text-xs text-slate-400">Registration Fee</p>
@@ -400,14 +417,28 @@ function EventModal({ event, onClose }) {
                   : "FREE"}
               </p>
             </div>
-            <button
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
-              onClick={() =>
-                toast.info("Registration coming in Milestone 3! 🚀")
-              }
-            >
-              <FaTicketAlt /> Register Now
-            </button>
+            {canRegister ? (
+              <button
+                onClick={handleRegister}
+                disabled={registering}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-60"
+              >
+                {registering ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <FaTicketAlt />
+                )}
+                {registering ? "Registering..." : "Register Now"}
+              </button>
+            ) : (
+              <span className="px-6 py-3 bg-slate-100 text-slate-500 font-bold rounded-xl text-sm">
+                {isFull
+                  ? "Event Full"
+                  : isCompleted
+                    ? "Event Ended"
+                    : "Registration Closed"}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -415,6 +446,7 @@ function EventModal({ event, onClose }) {
   );
 }
 
+// ─── Main Component ───────────────────────────────────────────────────────────
 function StudentEvents() {
   const [events, setEvents] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -430,6 +462,12 @@ function StudentEvents() {
   const [showFilters, setShowFilters] = useState(true);
   const [collegeFilter, setCollegeFilter] = useState("");
   const [colleges, setColleges] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   useEffect(() => {
     api
@@ -437,7 +475,6 @@ function StudentEvents() {
       .then((r) => {
         const evts = r.data.events || [];
         setEvents(evts);
-        // Build unique college list from events
         const unique = [
           ...new Map(
             evts.map((e) => [
@@ -448,7 +485,7 @@ function StudentEvents() {
         ].filter((c) => c.id);
         setColleges(unique);
       })
-      .catch(() => toast.error("Failed to load events"))
+      .catch(() => showToast("Failed to load events", "error"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -530,7 +567,6 @@ function StudentEvents() {
     setSortBy("date_asc");
     setCollegeFilter("");
   };
-
   const activeFilterCount = [
     category !== "all",
     status !== "all",
@@ -543,6 +579,8 @@ function StudentEvents() {
   return (
     <>
       <Navbar />
+      <Toast toast={toast} />
+
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
         <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-10 px-6">
           <div className="max-w-7xl mx-auto">
@@ -550,7 +588,6 @@ function StudentEvents() {
             <p className="text-indigo-200 text-sm">
               Find and register for inter-college events near you
             </p>
-
             <div className="mt-5 relative max-w-2xl">
               <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -569,14 +606,12 @@ function StudentEvents() {
                 </button>
               )}
             </div>
-
             <div className="mt-4 flex gap-2 flex-wrap">
               {CATEGORIES.map((c) => (
                 <button
                   key={c}
                   onClick={() => setCategory(c)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all capitalize
-                    ${category === c ? "bg-white text-indigo-700 shadow-md" : "bg-white/20 text-white hover:bg-white/30"}`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all capitalize ${category === c ? "bg-white text-indigo-700 shadow-md" : "bg-white/20 text-white hover:bg-white/30"}`}
                 >
                   {c === "all" ? "🌟 All" : `${CATEGORY_EMOJI[c]} ${c}`}
                 </button>
@@ -589,8 +624,7 @@ function StudentEvents() {
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border
-                ${showFilters ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-200"}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${showFilters ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-600 border-slate-200"}`}
             >
               <FaFilter />
               Filters
@@ -600,7 +634,6 @@ function StudentEvents() {
                 </span>
               )}
             </button>
-
             <div className="flex items-center gap-3">
               <span className="text-sm text-slate-500 font-medium">
                 {loading
@@ -635,202 +668,101 @@ function StudentEvents() {
                     onClick={clearFilters}
                     className="flex items-center gap-1 text-xs text-red-500 font-semibold hover:text-red-700"
                   >
-                    <FaTimes /> Clear All ({activeFilterCount})
+                    <FaTimes /> Clear All
                   </button>
                 )}
               </div>
-
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                    Category
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
-                    >
-                      {CATEGORIES.map((c) => (
-                        <option key={c} value={c}>
-                          {c === "all"
-                            ? "All Categories"
-                            : c.charAt(0).toUpperCase() + c.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
+                {[
+                  {
+                    label: "Category",
+                    value: category,
+                    onChange: setCategory,
+                    options: CATEGORIES.map((c) => ({
+                      value: c,
+                      label:
+                        c === "all"
+                          ? "All Categories"
+                          : c.charAt(0).toUpperCase() + c.slice(1),
+                    })),
+                  },
+                  {
+                    label: "Status",
+                    value: status,
+                    onChange: setStatus,
+                    options: STATUSES.map((s) => ({
+                      value: s,
+                      label:
+                        s === "all"
+                          ? "All Status"
+                          : s.charAt(0).toUpperCase() + s.slice(1),
+                    })),
+                  },
+                  {
+                    label: "Mode",
+                    value: eventType,
+                    onChange: setEventType,
+                    options: EVENT_TYPES.map((t) => ({
+                      value: t,
+                      label:
+                        t === "all"
+                          ? "All Modes"
+                          : t === "online"
+                            ? "🌐 Online"
+                            : t === "hybrid"
+                              ? "🔀 Hybrid"
+                              : "📍 Offline",
+                    })),
+                  },
+                  {
+                    label: "Date",
+                    value: dateFilter,
+                    onChange: setDateFilter,
+                    options: DATE_FILTERS.map((d) => ({
+                      value: d.value,
+                      label: d.label,
+                    })),
+                  },
+                  {
+                    label: "Fee",
+                    value: feeFilter,
+                    onChange: setFeeFilter,
+                    options: FEE_FILTERS.map((f) => ({
+                      value: f.value,
+                      label: f.label,
+                    })),
+                  },
+                  {
+                    label: "College",
+                    value: collegeFilter,
+                    onChange: setCollegeFilter,
+                    options: [
+                      { value: "", label: "All Colleges" },
+                      ...colleges.map((c) => ({ value: c.id, label: c.name })),
+                    ],
+                  },
+                ].map(({ label, value, onChange, options }) => (
+                  <div key={label}>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
+                      {label}
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
+                      >
+                        {options.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                      <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                    Status
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                      className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s === "all"
-                            ? "All Status"
-                            : s.charAt(0).toUpperCase() + s.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                    Mode
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={eventType}
-                      onChange={(e) => setEventType(e.target.value)}
-                      className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
-                    >
-                      {EVENT_TYPES.map((t) => (
-                        <option key={t} value={t}>
-                          {t === "all"
-                            ? "All Modes"
-                            : t === "online"
-                              ? "🌐 Online"
-                              : t === "hybrid"
-                                ? "🔀 Hybrid"
-                                : "📍 Offline"}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                    Date
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={dateFilter}
-                      onChange={(e) => setDateFilter(e.target.value)}
-                      className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
-                    >
-                      {DATE_FILTERS.map((d) => (
-                        <option key={d.value} value={d.value}>
-                          {d.label}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                    Fee
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={feeFilter}
-                      onChange={(e) => setFeeFilter(e.target.value)}
-                      className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
-                    >
-                      {FEE_FILTERS.map((f) => (
-                        <option key={f.value} value={f.value}>
-                          {f.label}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                    College
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={collegeFilter}
-                      onChange={(e) => setCollegeFilter(e.target.value)}
-                      className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 appearance-none bg-white font-medium"
-                    >
-                      <option value="">All Colleges</option>
-                      {colleges.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none" />
-                  </div>
-                </div>
+                ))}
               </div>
-
-              {activeFilterCount > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2 pt-3 border-t border-slate-100">
-                  <span className="text-xs text-slate-400 font-medium self-center">
-                    Active:
-                  </span>
-                  {category !== "all" && (
-                    <span className="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                      Category: {category}{" "}
-                      <button onClick={() => setCategory("all")}>
-                        <FaTimes className="text-xs" />
-                      </button>
-                    </span>
-                  )}
-                  {status !== "all" && (
-                    <span className="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                      Status: {status}{" "}
-                      <button onClick={() => setStatus("all")}>
-                        <FaTimes className="text-xs" />
-                      </button>
-                    </span>
-                  )}
-                  {eventType !== "all" && (
-                    <span className="px-2.5 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                      Mode: {eventType}{" "}
-                      <button onClick={() => setEventType("all")}>
-                        <FaTimes className="text-xs" />
-                      </button>
-                    </span>
-                  )}
-                  {dateFilter && (
-                    <span className="px-2.5 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                      Date:{" "}
-                      {DATE_FILTERS.find((d) => d.value === dateFilter)?.label}{" "}
-                      <button onClick={() => setDateFilter("")}>
-                        <FaTimes className="text-xs" />
-                      </button>
-                    </span>
-                  )}
-                  {feeFilter !== "all" && (
-                    <span className="px-2.5 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                      Fee: {feeFilter}{" "}
-                      <button onClick={() => setFeeFilter("all")}>
-                        <FaTimes className="text-xs" />
-                      </button>
-                    </span>
-                  )}
-                  {collegeFilter && (
-                    <span className="px-2.5 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                      College:{" "}
-                      {colleges.find((c) => c.id === collegeFilter)?.name ||
-                        collegeFilter}{" "}
-                      <button onClick={() => setCollegeFilter("")}>
-                        <FaTimes className="text-xs" />
-                      </button>
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
@@ -845,7 +777,6 @@ function StudentEvents() {
                   <div className="p-4 space-y-3">
                     <div className="h-3 bg-slate-200 rounded animate-pulse w-1/3" />
                     <div className="h-4 bg-slate-200 rounded animate-pulse" />
-                    <div className="h-3 bg-slate-200 rounded animate-pulse w-2/3" />
                     <div className="h-8 bg-slate-200 rounded-xl animate-pulse mt-3" />
                   </div>
                 </div>
@@ -887,6 +818,7 @@ function StudentEvents() {
         <EventModal
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
+          onToast={showToast}
         />
       )}
     </>

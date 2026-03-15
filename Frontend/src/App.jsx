@@ -1,89 +1,174 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom"; // Added Link
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Events from "./pages/Events";
+import EventDetails from "./pages/EventDetails";
+
+// Student
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
+import StudentNotifications from "./pages/dashboard/StudentNotifications";
+import StudentProfile from "./pages/profiledit/StudentProfile";
+import StudentEvents from "./pages/studentevents/StudentEvents";
+import MyRegistrations from "./pages/studentevents/MyRegistrations";
+
+// College Admin
 import CollegeAdminDashboard from "./pages/dashboard/CollegeAdminDashboard";
-import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
 import AdminProfile from "./pages/profiledit/AdminProfile";
-import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
-import Chatbot from "./components/Chatbot";
-import ProtectedRoute from "./components/ProtectedRoute";
 import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
-import StudentNotifications from "./pages/dashboard/StudentNotifications";
-import StudentProfile from "./pages/profiledit/StudentProfile";
-import RegisterEvents from "./pages/student/RegisterEvents";
-import MyRegistrations from "./pages/student/MyRegistrations";
-import StudentEvents from "./pages/studentevents/StudentEvents"; 
-// Super Admin imports
+
+// Super Admin
+import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
+import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
 import PendingColleges from "./pages/superadmin/PendingColleges";
-import PendingEvents from "./pages/superadmin/PendingEvents";
+import PendingEvents from "./pages/superadmin/Pendingevents";
 import AllColleges from "./pages/superadmin/AllColleges";
 import CollegeDetails from "./pages/superadmin/CollegeDetails";
 import Analytics from "./pages/superadmin/Analytics";
 import AllEvents from "./pages/superadmin/AllEvents";
+
+import Chatbot from "./components/Chatbot";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function App() {
   return (
     <BrowserRouter>
-      {/* ✅ FIX: Removed global <Navbar /> from here
-          Each page already has its own <Navbar /> inside it.
-          Having Navbar in BOTH App.jsx AND each page caused the double header. */}
       <Routes>
+        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/events/:id" element={<EventDetails />} />
 
-     
-         {/* ✅ CORRECT - Standalone routes */}
-        <Route path="/student/dashboard" element={
-          <ProtectedRoute role="student">
-            <StudentDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/student/notifications" element={
-          <ProtectedRoute role="student">
-            <StudentNotifications />
-          </ProtectedRoute>
-        } />
-        <Route path="/student/events" element={
-          <ProtectedRoute role="student">
-            <StudentEvents />  {/* Your existing events page */}
-          </ProtectedRoute>
-        } />
-        <Route path="/student/registrations" element={
-          <ProtectedRoute role="student">
-            <MyRegistrations />
-          </ProtectedRoute>
-        } />
+        {/* Student */}
+        <Route
+          path="/student/dashboard"
+          element={
+            <ProtectedRoute role="student">
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/events"
+          element={
+            <ProtectedRoute role="student">
+              <StudentEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/registrations"
+          element={
+            <ProtectedRoute role="student">
+              <MyRegistrations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/notifications"
+          element={
+            <ProtectedRoute role="student">
+              <StudentNotifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/profile"
+          element={
+            <ProtectedRoute role="student">
+              <StudentProfile />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/student/profile" element={
-          <ProtectedRoute role="student">
-            <StudentProfile />
-          </ProtectedRoute>
-        } />
-
-        {/* Super Admin Routes */}
+        {/* Super Admin */}
         <Route
           path="/super-admin/dashboard"
-          element={<SuperAdminDashboard />}
+          element={
+            <ProtectedRoute role="super_admin">
+              <SuperAdminDashboard />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/super-admin/profile" element={<SuperAdminProfile />} />
-        <Route path="/super-admin/colleges" element={<AllColleges />} />
-        <Route path="/super-admin/colleges/:id" element={<CollegeDetails />} />
+        <Route
+          path="/super-admin/profile"
+          element={
+            <ProtectedRoute role="super_admin">
+              <SuperAdminProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/colleges"
+          element={
+            <ProtectedRoute role="super_admin">
+              <AllColleges />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/colleges/:id"
+          element={
+            <ProtectedRoute role="super_admin">
+              <CollegeDetails />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/super-admin/pending-colleges"
-          element={<PendingColleges />}
+          element={
+            <ProtectedRoute role="super_admin">
+              <PendingColleges />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/super-admin/pending-events" element={<PendingEvents />} />
-        <Route path="/super-admin/reports" element={<Analytics />} />
+        <Route
+          path="/super-admin/pending-events"
+          element={
+            <ProtectedRoute role="super_admin">
+              <PendingEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/reports"
+          element={
+            <ProtectedRoute role="super_admin">
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/super-admin/all-events"
+          element={
+            <ProtectedRoute role="super_admin">
+              <AllEvents />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* College Admin Routes */}
-        <Route path="/admin/profile" element={<AdminProfile />} />
-
-        {/* Specific College Admin Routes FIRST */}
+        {/* College Admin */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeAdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute role="college_admin">
+              <AdminProfile />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/dashboard/create-event"
           element={
@@ -117,23 +202,22 @@ function App() {
           }
         />
 
-        {/* General College Admin Route LAST */}
-        <Route path="/admin/dashboard" element={<CollegeAdminDashboard />} />
-
-        {/* 404 Catch All */}
+        {/* 404 */}
         <Route
           path="*"
           element={
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
               <div className="text-center p-12">
-                <h1 className="text-6xl font-black text-slate-800 mb-4">404</h1>
-                <p className="text-2xl text-slate-600 mb-8">Page Not Found</p>
-                <a
-                  href="/"
-                  className="px-8 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl font-bold text-xl hover:shadow-2xl transition-all"
+                <h1 className="text-8xl font-black text-slate-200 mb-4">404</h1>
+                <p className="text-2xl font-bold text-slate-600 mb-8">
+                  Page Not Found
+                </p>
+                <Link
+                  to="/"
+                  className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold hover:shadow-xl transition-all inline-block"
                 >
                   Go Home
-                </a>
+                </Link>
               </div>
             </div>
           }
