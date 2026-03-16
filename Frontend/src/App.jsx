@@ -24,7 +24,7 @@ import ManageRegistrations from "./pages/event/ManageRegistrations";
 import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
 import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
 import PendingColleges from "./pages/superadmin/PendingColleges";
-import PendingEvents from "./pages/superadmin/PendingEvents";
+import PendingEvents from "./pages/superadmin/Pendingevents";
 import AllColleges from "./pages/superadmin/AllColleges";
 import CollegeDetails from "./pages/superadmin/CollegeDetails";
 import Analytics from "./pages/superadmin/Analytics";

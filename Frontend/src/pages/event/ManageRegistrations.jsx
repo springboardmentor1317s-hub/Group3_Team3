@@ -1,15 +1,42 @@
-// src/pages/event/ManageRegistrations.jsx
+// src/pages/event/ManageRegistrations.jsx - WITH EXPORT ✅
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../services/api";
 import Navbar from "../../components/Navbar";
+import * as XLSX from "xlsx"; // ✅ NEW: Excel library
+import { FaFileExcel, FaDownload } from "react-icons/fa"; // ✅ NEW: Icons
 
 function ManageRegistrations() {
   const { eventId } = useParams();
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null); // id of reg being updated
+  const [actionLoading, setActionLoading] = useState(null);
   const [toast, setToast] = useState(null);
+
+  // ✅ NEW: EXPORT TO EXCEL FUNCTION
+  const exportToExcel = () => {
+    // Format data for Excel
+    const excelData = registrations.map((reg) => ({
+      Name: reg.user_id?.name || "Unknown",
+      Email: reg.user_id?.email || "—",
+      College: reg.user_id?.college || "—",
+      Phone: reg.phone || "—",
+      Status: reg.status?.toUpperCase() || "PENDING",
+      Registered: new Date(reg.timestamp || reg.createdAt).toLocaleDateString(
+        "en-IN",
+      ),
+      _id: reg._id, // Internal ID
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Registrations");
+
+    const fileName = `Event_Registrations_${eventId}_${new Date().toISOString().split("T")[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    showToast("Excel exported successfully!", "success");
+  };
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -19,7 +46,6 @@ function ManageRegistrations() {
   const fetchRegs = async () => {
     try {
       setLoading(true);
-      // ✅ FIXED: correct endpoint from your backend
       const res = await api.get(`/registrations/event/${eventId}`);
       setRegistrations(res.data.registrations || []);
     } catch {
@@ -36,7 +62,6 @@ function ManageRegistrations() {
   const handleStatus = async (id, status) => {
     try {
       setActionLoading(id);
-      // ✅ FIXED: correct endpoint and body from your backend
       await api.put(`/registrations/${id}/status`, { status });
       showToast(`Registration ${status} successfully`);
       fetchRegs();
@@ -63,7 +88,6 @@ function ManageRegistrations() {
     );
   };
 
-  // Count summary
   const counts = registrations.reduce((acc, r) => {
     acc[r.status] = (acc[r.status] || 0) + 1;
     return acc;
@@ -73,7 +97,6 @@ function ManageRegistrations() {
     <>
       <Navbar />
 
-      {/* Toast */}
       {toast && (
         <div
           className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-2xl shadow-2xl font-bold text-white transition-all ${toast.type === "error" ? "bg-red-500" : "bg-emerald-500"}`}
@@ -84,7 +107,7 @@ function ManageRegistrations() {
 
       <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          {/* Header */}
+          {/* ✅ UPDATED HEADER WITH EXPORT BUTTON */}
           <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center gap-3 mb-1">
@@ -119,21 +142,34 @@ function ManageRegistrations() {
               </p>
             </div>
 
-            {/* Summary badges */}
-            <div className="flex gap-3 flex-wrap">
-              <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
-                ⏳ Pending: {counts.pending || 0}
-              </span>
-              <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
-                ✅ Approved: {counts.approved || 0}
-              </span>
-              <span className="px-3 py-1.5 bg-red-100 text-red-700 rounded-full text-xs font-bold">
-                ❌ Rejected: {counts.rejected || 0}
-              </span>
+            {/* ✅ SUMMARY + EXPORT BUTTONS */}
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Summary badges */}
+              <div className="flex gap-3 flex-wrap">
+                <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
+                  ⏳ Pending: {counts.pending || 0}
+                </span>
+                <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+                  ✅ Approved: {counts.approved || 0}
+                </span>
+                <span className="px-3 py-1.5 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                  ❌ Rejected: {counts.rejected || 0}
+                </span>
+              </div>
+
+              {/* ✅ NEW EXPORT BUTTON */}
+              <button
+                onClick={exportToExcel}
+                disabled={loading || registrations.length === 0}
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                <FaFileExcel className="text-sm" />
+                Export Excel ({registrations.length})
+              </button>
             </div>
           </div>
 
-          {/* Content */}
+          {/* Rest of your existing content... */}
           {loading ? (
             <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
               <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -167,6 +203,7 @@ function ManageRegistrations() {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
+                  {/* Your existing table code - NO CHANGE */}
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
                       <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">
@@ -198,7 +235,6 @@ function ManageRegistrations() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                              {/* ✅ FIXED: backend populates user_id with .name not .fullName */}
                               <span className="text-indigo-600 font-semibold text-xs">
                                 {r.user_id?.name?.charAt(0).toUpperCase() ||
                                   "?"}

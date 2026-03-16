@@ -61,6 +61,7 @@ function Register() {
 
       toast.success("Account created successfully!");
 
+      // ✅ FIXED: was checking user.accountType → backend returns user.role
       if (user.role === "college_admin") {
         navigate("/admin/dashboard");
       } else if (user.role === "super_admin") {
@@ -245,7 +246,7 @@ function Register() {
                 Already have an account?{" "}
                 <Link
                   to="/login"
-                  className="text-indigo-500 font-semibold hover:underline"
+                  className="text-indigo-500 font-semibold no-underline hover:underline"
                 >
                   Sign In
                 </Link>

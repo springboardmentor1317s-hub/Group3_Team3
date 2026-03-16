@@ -5,6 +5,7 @@ import {
   getEventById,
   updateEvent,
   deleteEvent,
+
 } from '../controllers/events.controller.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
 import { handleUpload } from '../middleware/upload.middleware.js';
