@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import { toast } from "react-toastify";
-import { setToken } from "../services/auth";
+import { setToken, setUser } from "../services/auth";
 import {
   FaEnvelope,
   FaUser,
@@ -24,6 +24,7 @@ function Register() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -39,7 +40,9 @@ function Register() {
     }
 
     try {
-      const res = await api.post("/auth/signup", {
+      setLoading(true);
+      // ✅ FIXED: was /auth/signup → correct endpoint is /auth/register
+      const res = await api.post("/auth/register", {
         name: formData.name,
         email: formData.email,
         college: formData.college,
@@ -51,15 +54,17 @@ function Register() {
       const token = res.data.token;
 
       setToken(token);
+      setUser(user);
       localStorage.setItem("token", token);
       localStorage.setItem("role", user.role);
       localStorage.setItem("user", JSON.stringify(user));
 
       toast.success("Account created successfully!");
 
-      if (user.accountType === "College Admin") {
+      // ✅ FIXED: was checking user.accountType → backend returns user.role
+      if (user.role === "college_admin") {
         navigate("/admin/dashboard");
-      } else if (user.accountType === "Super Admin") {
+      } else if (user.role === "super_admin") {
         navigate("/super-admin/dashboard");
       } else {
         navigate("/student/dashboard");
@@ -70,28 +75,31 @@ function Register() {
         err.response?.data?.message ||
         "Registration failed. Please try again.";
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const inputClass =
-    "w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-inherit";
-
+    "w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
   const passwordInputClass =
-    "w-full pl-10 pr-10 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-inherit";
+    "w-full pl-10 pr-10 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-linear-to-br from-indigo-500 to-purple-700 flex items-center justify-center p-5">
-        <div className="w-full max-w-120">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-700 flex items-center justify-center p-5">
+        <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="bg-linear-to-br from-indigo-500 to-purple-700 px-8 py-10 text-center text-white">
-              <div className="w-17.5 h-17.5 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-700 px-8 py-10 text-center text-white">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
                 <FaGraduationCap />
               </div>
-              <h2 className="text-3xl font-bold m-0">Join Campus Hub</h2>
-              <p className="text-sm opacity-90 mt-1">Connect with your campus community</p>
+              <h2 className="text-3xl font-bold">Join Campus Hub</h2>
+              <p className="text-sm opacity-90 mt-1">
+                Connect with your campus community
+              </p>
             </div>
 
             {/* Form */}
@@ -99,7 +107,9 @@ function Register() {
               <form onSubmit={handleRegister} className="space-y-5">
                 {/* Full Name */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Full Name
+                  </label>
                   <div className="relative">
                     <FaUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
                     <input
@@ -116,7 +126,9 @@ function Register() {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <FaEnvelope className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
                     <input
@@ -133,7 +145,9 @@ function Register() {
 
                 {/* College */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">College Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    College Name
+                  </label>
                   <div className="relative">
                     <FaGraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
                     <input
@@ -150,10 +164,12 @@ function Register() {
 
                 {/* Role */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Account Type</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Account Type
+                  </label>
                   <select
                     name="role"
-                    className="w-full px-3.5 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white"
+                    className="w-full px-3.5 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-white"
                     value={formData.role}
                     onChange={handleChange}
                     required
@@ -166,7 +182,9 @@ function Register() {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Password
+                  </label>
                   <div className="relative">
                     <FaLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
                     <input
@@ -179,7 +197,7 @@ function Register() {
                       required
                     />
                     <span
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer text-base"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -189,7 +207,9 @@ function Register() {
 
                 {/* Confirm Password */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Confirm Password
+                  </label>
                   <div className="relative">
                     <FaLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
                     <input
@@ -202,8 +222,10 @@ function Register() {
                       required
                     />
                     <span
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer text-base"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                     >
                       {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                     </span>
@@ -213,15 +235,19 @@ function Register() {
                 {/* Submit */}
                 <button
                   type="submit"
-                  className="w-full py-3.5 text-base font-bold text-white bg-linear-to-br from-indigo-500 to-purple-700 border-none rounded-xl cursor-pointer transition-all duration-300 shadow-lg shadow-indigo-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-400 mt-2"
+                  disabled={loading}
+                  className="w-full py-3.5 text-base font-bold text-white bg-gradient-to-br from-indigo-500 to-purple-700 rounded-xl cursor-pointer transition-all duration-300 shadow-lg hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-60 mt-2"
                 >
-                  Create Account
+                  {loading ? "Creating Account..." : "Create Account"}
                 </button>
               </form>
 
               <p className="text-center mt-6 text-sm text-gray-500">
                 Already have an account?{" "}
-                <Link to="/login" className="text-indigo-500 font-semibold no-underline hover:underline">
+                <Link
+                  to="/login"
+                  className="text-indigo-500 font-semibold no-underline hover:underline"
+                >
                   Sign In
                 </Link>
               </p>
