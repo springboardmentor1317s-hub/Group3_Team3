@@ -19,6 +19,7 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
+import CollegeEventDetails from "./pages/event/CollegeEventDetails"
 
 // Super Admin
 import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
@@ -182,6 +183,14 @@ function App() {
           element={
             <ProtectedRoute role="college_admin">
               <CollegeEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/eventsDetails/:id"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeEventDetails />
             </ProtectedRoute>
           }
         />
