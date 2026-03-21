@@ -13,6 +13,10 @@ import eventRoutes from './routes/event.routes.js';
 import registrationRoutes from './routes/registration.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import feedbackRoutes from "./routes/feedback.routes.js";
+import commentRoutes  from "./routes/comment.routes.js";
+
+
 
 dotenv.config();
 
@@ -48,6 +52,10 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use("/api/feedback",  feedbackRoutes);
+app.use("/api/comments",  commentRoutes);
+
+
 
 app.use(errorHandler);
 
