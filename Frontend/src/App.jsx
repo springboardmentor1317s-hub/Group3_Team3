@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Events from "./pages/Events";
-import EventDetails from "./pages/event/EventDetails"; // ✅ FIXED: was ./pages/EventDetails
+import EventDetails from "./pages/event/EventDetails";
 
 // Student
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
@@ -19,14 +19,13 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
-
 import CollegeEventDetails from "./pages/event/CollegeEventDetails";
 
 // Super Admin
 import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
 import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
 import PendingColleges from "./pages/superadmin/PendingColleges";
-import PendingEvents from "./pages/superadmin/Pendingevents";
+import PendingEvents from "./pages/superadmin/PendingEvents"; // ✅ FIXED: was "Pendingevents" (wrong case)
 import AllColleges from "./pages/superadmin/AllColleges";
 import CollegeDetails from "./pages/superadmin/CollegeDetails";
 import Analytics from "./pages/superadmin/Analytics";

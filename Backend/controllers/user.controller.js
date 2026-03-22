@@ -42,7 +42,7 @@ export const getProfile = async (req, res) => {
 };
 
 /**
- * @desc    Update user profile
+ * @desc    Update user profile (own profile)
  * @route   PUT /api/users/profile
  * @access  Private
  */
@@ -59,7 +59,6 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Update fields
     if (name) user.name = name;
     if (college) user.college = college;
 
@@ -98,7 +97,6 @@ export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    // Get user with password
     const user = await User.findById(req.user._id).select('+password');
 
     if (!user) {
@@ -108,7 +106,6 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // Verify current password
     const isPasswordMatch = await user.comparePassword(currentPassword);
 
     if (!isPasswordMatch) {
@@ -118,7 +115,6 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // Update password
     user.password = newPassword;
     await user.save();
 
@@ -143,11 +139,10 @@ export const changePassword = async (req, res) => {
  */
 export const getAllUsers = async (req, res) => {
   try {
-    const { role, college, search, page = 1, limit = 10 } = req.query;
+    const { role, college, search, page = 1, limit = 100 } = req.query;
 
-    // Build query
     const query = {};
-    
+
     if (role) query.role = role;
     if (college) query.college = { $regex: college, $options: 'i' };
     if (search) {
@@ -157,21 +152,20 @@ export const getAllUsers = async (req, res) => {
       ];
     }
 
-    // Calculate pagination
     const skip = (page - 1) * limit;
 
-    // Get users
     const users = await User.find(query)
       .select('-password')
       .limit(parseInt(limit))
       .skip(skip)
       .sort({ createdAt: -1 });
 
-    // Get total count
     const total = await User.countDocuments(query);
 
     res.status(200).json({
       success: true,
+      // ✅ FIXED: Also expose users at top level so frontend res.data.users works too
+      users,
       data: {
         users,
         pagination: {
@@ -210,6 +204,8 @@ export const getUserById = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      // ✅ FIXED: expose at both res.data.user and res.data.data.user
+      user,
       data: { user }
     });
   } catch (error) {
@@ -217,6 +213,43 @@ export const getUserById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching user',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @desc    Update any user by ID (Super Admin only) — used for approve/reject college
+ * @route   PUT /api/users/:id
+ * @access  Private/SuperAdmin
+ */
+export const updateUserById = async (req, res) => {
+  try {
+    // ✅ NEW: Super admin needs this to approve/update college admins
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      user,
+      data: { user }
+    });
+  } catch (error) {
+    console.error('Update user by ID error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating user',
       error: error.message
     });
   }
@@ -238,7 +271,6 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    // Prevent deleting yourself
     if (user._id.toString() === req.user._id.toString()) {
       return res.status(400).json({
         success: false,

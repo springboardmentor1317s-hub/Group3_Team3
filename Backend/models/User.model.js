@@ -24,12 +24,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
-      select: false // Don't include password in queries by default
+      select: false
     },
     college: {
       type: String,
-      required: [true, 'College name is required'],
-      trim: true
+      // ✅ FIXED: college is NOT required for super_admin
+      // Validation is handled via custom validator below
+      trim: true,
+      default: null
     },
     role: {
       type: String,
@@ -74,7 +76,6 @@ const userSchema = new mongoose.Schema(
       github: { type: String, default: null },
       twitter: { type: String, default: null }
     },
-    // Event-related fields
     registeredEvents: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Event'
@@ -94,13 +95,11 @@ const userSchema = new mongoose.Schema(
         default: Date.now
       }
     }],
-    // Notification preferences
     notificationPreferences: {
       email: { type: Boolean, default: true },
       sms: { type: Boolean, default: false },
       push: { type: Boolean, default: true }
     },
-    // Account status
     emailVerified: {
       type: Boolean,
       default: false
@@ -119,18 +118,24 @@ const userSchema = new mongoose.Schema(
     }
   },
   {
-    timestamps: true, 
+    timestamps: true,
     collection: 'users'
   }
 );
 
+// ✅ FIXED: Custom validator — college required only for student and college_admin
+userSchema.pre('validate', function (next) {
+  if (this.role !== 'super_admin' && !this.college) {
+    this.invalidate('college', 'College name is required for students and college admins');
+  }
+  next();
+});
+
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-  // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) {
     return next();
   }
-
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -149,7 +154,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   }
 };
 
-// Method to remove password from JSON output
+// Remove sensitive fields from JSON output
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
@@ -159,16 +164,16 @@ userSchema.methods.toJSON = function () {
   return user;
 };
 
-// Static method to find user by email (case-insensitive)
+// Static method to find user by email
 userSchema.statics.findByEmail = function (email) {
   return this.findOne({ email: email.toLowerCase() });
 };
 
-// Virtual for full profile completion percentage
+// Virtual for profile completion percentage
 userSchema.virtual('profileCompletion').get(function () {
   let completed = 0;
   const fields = ['name', 'email', 'college', 'phone', 'bio', 'department', 'year', 'profilePicture'];
-  
+
   fields.forEach(field => {
     if (this[field] && this[field] !== null && this[field] !== '') {
       completed++;
@@ -181,7 +186,6 @@ userSchema.virtual('profileCompletion').get(function () {
   return Math.round((completed / (fields.length + 2)) * 100);
 });
 
-// Index for faster queries
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ college: 1 });

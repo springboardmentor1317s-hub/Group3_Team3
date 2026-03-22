@@ -47,9 +47,16 @@ export const registerValidation = [
     .notEmpty().withMessage('Password is required')
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 
-  body('college')
-    .trim()
-    .notEmpty().withMessage('College name is required'),
+  // ✅ FIXED: college is only required when role is NOT super_admin
+  body('college').custom((value, { req }) => {
+    const role = req.body.role || 'student';
+    if (role !== 'super_admin') {
+      if (!value || value.trim() === '') {
+        throw new Error('College name is required');
+      }
+    }
+    return true;
+  }),
 
   validate
 ];

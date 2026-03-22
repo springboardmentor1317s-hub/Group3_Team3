@@ -41,14 +41,25 @@ function Register() {
 
     try {
       setLoading(true);
-      // ✅ FIXED: was /auth/signup → correct endpoint is /auth/register
-      const res = await api.post("/auth/register", {
+
+      const payload = {
         name: formData.name,
         email: formData.email,
-        college: formData.college,
         role: formData.role,
         password: formData.password,
-      });
+      };
+
+      // ✅ FIXED: Only send college if not super_admin (backend requires it for others)
+      if (formData.role !== "super_admin") {
+        if (!formData.college.trim()) {
+          toast.error("College name is required");
+          setLoading(false);
+          return;
+        }
+        payload.college = formData.college;
+      }
+
+      const res = await api.post("/auth/register", payload);
 
       const user = res.data.user;
       const token = res.data.token;
@@ -61,7 +72,6 @@ function Register() {
 
       toast.success("Account created successfully!");
 
-      // ✅ FIXED: was checking user.accountType → backend returns user.role
       if (user.role === "college_admin") {
         navigate("/admin/dashboard");
       } else if (user.role === "super_admin") {
@@ -84,6 +94,8 @@ function Register() {
     "w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
   const passwordInputClass =
     "w-full pl-10 pr-10 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
+
+  const isSuperAdmin = formData.role === "super_admin";
 
   return (
     <>
@@ -143,25 +155,6 @@ function Register() {
                   </div>
                 </div>
 
-                {/* College */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    College Name
-                  </label>
-                  <div className="relative">
-                    <FaGraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
-                    <input
-                      type="text"
-                      name="college"
-                      className={inputClass}
-                      placeholder="Enter your college"
-                      value={formData.college}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
                 {/* Role */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -179,6 +172,35 @@ function Register() {
                     <option value="super_admin">Super Admin</option>
                   </select>
                 </div>
+
+                {/* College — hidden for super_admin */}
+                {!isSuperAdmin && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      College Name
+                    </label>
+                    <div className="relative">
+                      <FaGraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none" />
+                      <input
+                        type="text"
+                        name="college"
+                        className={inputClass}
+                        placeholder="Enter your college"
+                        value={formData.college}
+                        onChange={handleChange}
+                        required={!isSuperAdmin}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Super admin info banner */}
+                {isSuperAdmin && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 text-sm text-purple-700 font-medium">
+                    🛡️ Super Admin accounts have platform-wide access and are
+                    not tied to a specific college.
+                  </div>
+                )}
 
                 {/* Password */}
                 <div>
