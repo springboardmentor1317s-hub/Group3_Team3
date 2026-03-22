@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Events from "./pages/Events";
-import EventDetails from "./pages/EventDetails";
+import EventDetails from "./pages/event/EventDetails"; // ✅ FIXED: was ./pages/EventDetails
 
 // Student
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
@@ -19,7 +19,8 @@ import CreateEvent from "./pages/event/CreateEvent";
 import EditEvent from "./pages/event/EditEvent";
 import CollegeEvents from "./pages/event/CollegeEvents";
 import ManageRegistrations from "./pages/event/ManageRegistrations";
-import CollegeEventDetails from "./pages/event/CollegeEventDetails"
+
+import CollegeEventDetails from "./pages/event/CollegeEventDetails";
 
 // Super Admin
 import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
@@ -30,6 +31,10 @@ import AllColleges from "./pages/superadmin/AllColleges";
 import CollegeDetails from "./pages/superadmin/CollegeDetails";
 import Analytics from "./pages/superadmin/Analytics";
 import AllEvents from "./pages/superadmin/AllEvents";
+
+// Feedback
+import EventFeedback from "./pages/student/EventFeedback";
+import FeedbackAnalytics from "./pages/admin/FeedbackAnalytics";
 
 import Chatbot from "./components/Chatbot";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -45,7 +50,7 @@ function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
 
-        {/* Student */}
+        {/* ── Student ───────────────────────────────────────────────────── */}
         <Route
           path="/student/dashboard"
           element={
@@ -86,8 +91,82 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/student/feedback/:eventId"
+          element={
+            <ProtectedRoute role="student">
+              <EventFeedback />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Super Admin */}
+        {/* ── College Admin ─────────────────────────────────────────────── */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeAdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute role="college_admin">
+              <AdminProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/create-event"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CreateEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/eventsDetails/:id"
+          element={
+            <ProtectedRoute role="college_admin">
+              <CollegeEventDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events/:id"
+          element={
+            <ProtectedRoute role="college_admin">
+              <EditEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard/events/:eventId/registrations"
+          element={
+            <ProtectedRoute role="college_admin">
+              <ManageRegistrations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/feedback-analytics"
+          element={
+            <ProtectedRoute role="college_admin">
+              <FeedbackAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ── Super Admin ───────────────────────────────────────────────── */}
         <Route
           path="/super-admin/dashboard"
           element={
@@ -149,64 +228,6 @@ function App() {
           element={
             <ProtectedRoute role="super_admin">
               <AllEvents />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* College Admin */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute role="college_admin">
-              <CollegeAdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/profile"
-          element={
-            <ProtectedRoute role="college_admin">
-              <AdminProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/create-event"
-          element={
-            <ProtectedRoute role="college_admin">
-              <CreateEvent />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/events"
-          element={
-            <ProtectedRoute role="college_admin">
-              <CollegeEvents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/eventsDetails/:id"
-          element={
-            <ProtectedRoute role="college_admin">
-              <CollegeEventDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/events/:id"
-          element={
-            <ProtectedRoute role="college_admin">
-              <EditEvent />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard/events/:eventId/registrations"
-          element={
-            <ProtectedRoute role="college_admin">
-              <ManageRegistrations />
             </ProtectedRoute>
           }
         />

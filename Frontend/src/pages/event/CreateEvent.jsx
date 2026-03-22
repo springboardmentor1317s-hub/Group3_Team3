@@ -487,8 +487,10 @@ function CreateEvent() {
                       Feature this event on homepage
                     </label>
                   </div>
+                  
                 </div>
               </div>
+              
 
               {/* STATUS */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">

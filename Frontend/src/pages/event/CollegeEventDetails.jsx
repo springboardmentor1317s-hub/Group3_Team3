@@ -3,6 +3,9 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../services/api";
 import { toast } from "react-toastify";
 import Navbar from "../../components/Navbar";
+
+import EventComments from "./components/EventComments"; // ✅ added
+
 import {
   FaCalendarAlt,
   FaMapMarkerAlt,
@@ -10,6 +13,8 @@ import {
   FaRupeeSign,
   FaTag,
   FaArrowLeft,
+  FaCommentAlt,
+  FaUserShield,
 } from "react-icons/fa";
 
 function CollegeEventDetails() {
@@ -64,7 +69,8 @@ function CollegeEventDetails() {
         <Navbar />
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
+
             <p className="mt-4 text-gray-600">Loading event details...</p>
           </div>
         </div>
@@ -79,10 +85,37 @@ function CollegeEventDetails() {
       <Navbar />
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-         
+          {/* Back button */}
+          <Link
+            to="/admin/dashboard"
+            className="inline-flex items-center gap-2 mb-6 text-indigo-600 hover:text-indigo-700 font-semibold"
+          >
+            <FaArrowLeft /> Back to Dashboard
+          </Link>
 
-          {/* Main Card */}
+          {/* ── Admin badge notice ─────────────────────────────────────── */}
+          <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-5 py-3 mb-6">
+            <FaUserShield className="text-indigo-600 text-xl flex-shrink-0" />
+            <div>
+              <p className="font-bold text-indigo-800 text-sm">Admin View</p>
+              <p className="text-indigo-600 text-xs mt-0.5">
+                You can view and reply to all student comments. Your replies
+                will show an <span className="font-bold">Admin</span> badge.
+              </p>
+            </div>
+          </div>
+
+          {/* ── Main Card ─────────────────────────────────────────────── */}
           <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            {/* Event banner */}
+            {event.image && (
+              <img
+                src={event.image}
+                alt={event.title}
+                className="w-full h-52 object-cover"
+              />
+            )}
+
             <div className="p-8">
               <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
                 <div className="flex-1">
@@ -95,6 +128,19 @@ function CollegeEventDetails() {
                     >
                       <FaTag className="text-xs" /> {event.category}
                     </span>
+                    {event.status && (
+                      <span
+                        className={`px-3 py-1 text-xs font-bold rounded-full ${
+                          event.status === "published"
+                            ? "bg-green-100 text-green-700"
+                            : event.status === "completed"
+                              ? "bg-slate-100 text-slate-600"
+                              : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {event.status}
+                      </span>
+                    )}
                     {event.organizer && (
                       <span className="text-sm text-gray-500">
                         by {event.organizer}
@@ -113,14 +159,16 @@ function CollegeEventDetails() {
                     <FaCalendarAlt className="text-indigo-600 mt-1 flex-shrink-0" />
                     <div>
                       <p className="font-medium">Date & Time</p>
+
                       <p className="text-sm text-gray-600">
                         {formatDate(event.start_date)}
                       </p>
-                      {event.end_date && event.end_date !== event.start_date && (
-                        <p className="text-sm text-gray-600">
-                          to {formatDate(event.end_date)}
-                        </p>
-                      )}
+                      {event.end_date &&
+                        event.end_date !== event.start_date && (
+                          <p className="text-sm text-gray-600">
+                            to {formatDate(event.end_date)}
+                          </p>
+                        )}
                     </div>
                   </div>
                   <div className="flex items-start gap-3 text-gray-700">
@@ -152,6 +200,7 @@ function CollegeEventDetails() {
                       <FaRupeeSign className="text-indigo-600 mt-1 flex-shrink-0" />
                       <div>
                         <p className="font-medium">Registration Fee</p>
+
                         <p className="text-sm text-gray-600">
                           ₹{event.registration_fee}
                         </p>
@@ -169,6 +218,7 @@ function CollegeEventDetails() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 Requirements
               </h3>
+
               <p className="text-gray-600">{event.requirements}</p>
             </div>
           )}
@@ -177,6 +227,7 @@ function CollegeEventDetails() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 Eligibility
               </h3>
+
               <p className="text-gray-600">{event.eligibility}</p>
             </div>
           )}
@@ -190,6 +241,10 @@ function CollegeEventDetails() {
               </p>
             </div>
           )}
+
+          {/* ── Comments Section ───────────────────────────────────────── */}
+          {/* Admin can see all comments and reply — replies show "Admin" badge */}
+          <EventComments eventId={id} />
         </div>
       </div>
     </>
