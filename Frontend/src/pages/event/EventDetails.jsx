@@ -7,8 +7,8 @@ import Navbar from "../../components/Navbar";
 import EventComments from "./components/EventComments";
 import {
   FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaRupeeSign,
-  FaTag, FaArrowLeft, FaStar, FaCheckCircle, FaThumbsUp,
-  FaThumbsDown, FaUserShield,
+  FaTag, FaArrowLeft, FaStar, FaCheckCircle,
+  FaThumbsUp, FaThumbsDown, FaUserShield,
 } from "react-icons/fa";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -20,7 +20,6 @@ function timeAgo(date) {
   if(d<1) return "Today"; if(d===1) return "Yesterday"; return `${d}d ago`;
 }
 
-// ── Star display ──────────────────────────────────────────────────────────────
 function Stars({ value, size="text-sm" }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -31,7 +30,7 @@ function Stars({ value, size="text-sm" }) {
   );
 }
 
-// ── Feedback Card ─────────────────────────────────────────────────────────────
+// ── Feedback Card (admin view only) ──────────────────────────────────────────
 function FeedbackCard({ fb, currentUserId }) {
   const [liked,    setLiked]    = useState(fb.likes?.includes(currentUserId));
   const [disliked, setDisliked] = useState(fb.dislikes?.includes(currentUserId));
@@ -55,8 +54,7 @@ function FeedbackCard({ fb, currentUserId }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all">
-      {/* Header */}
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 ${avBg(fb.student?.name)} rounded-full flex items-center justify-center font-bold text-white text-sm flex-shrink-0`}>
@@ -75,10 +73,8 @@ function FeedbackCard({ fb, currentUserId }) {
         )}
       </div>
 
-      {/* Comment */}
       <p className="text-gray-700 text-sm leading-relaxed mb-4">{fb.comment}</p>
 
-      {/* Like / Dislike */}
       <div className="flex items-center gap-3 text-xs border-t border-gray-50 pt-3">
         <button onClick={handleLike}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition-all ${liked?"bg-indigo-100 text-indigo-700":"text-gray-400 hover:bg-gray-100"}`}>
@@ -88,57 +84,54 @@ function FeedbackCard({ fb, currentUserId }) {
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition-all ${disliked?"bg-red-100 text-red-700":"text-gray-400 hover:bg-gray-100"}`}>
           <FaThumbsDown/> {dislikes}
         </button>
-        <span className="ml-auto text-gray-400">
-          {fb.replies?.length>0 && `${fb.replies.length} repl${fb.replies.length===1?"y":"ies"}`}
-        </span>
       </div>
     </div>
   );
 }
 
-// ── Rating Bar ────────────────────────────────────────────────────────────────
 function RatingBar({ star, count, total }) {
   const pct = total>0 ? Math.round((count/total)*100) : 0;
   return (
     <div className="flex items-center gap-2 text-xs">
       <span className="text-gray-500 font-semibold w-6">{star}★</span>
       <div className="flex-1 bg-gray-100 rounded-full h-2">
-        <div className={`h-full rounded-full transition-all ${star>=4?"bg-emerald-400":star===3?"bg-yellow-400":"bg-red-400"}`} style={{width:`${pct}%`}}/>
+        <div className={`h-full rounded-full transition-all ${star>=4?"bg-emerald-400":star===3?"bg-yellow-400":"bg-red-400"}`}
+          style={{width:`${pct}%`}}/>
       </div>
       <span className="text-gray-400 w-6 text-right">{count}</span>
     </div>
   );
 }
 
-// ── Main EventDetails ─────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 function EventDetails() {
-  const { id }     = useParams();
-  const navigate   = useNavigate();
+  const { id }   = useParams();
+  const navigate = useNavigate();
 
-  const [event,       setEvent]       = useState(null);
-  const [loading,     setLoading]     = useState(true);
-  const [registering, setRegistering] = useState(false);
-  const [isRegistered,setIsRegistered]= useState(false);
-  const [myFeedback,  setMyFeedback]  = useState(null);
+  const [event,        setEvent]        = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [registering,  setRegistering]  = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [myFeedback,   setMyFeedback]   = useState(null);
 
-  // Feedback section state
-  const [feedbacks,   setFeedbacks]   = useState([]);
-  const [avgRating,   setAvgRating]   = useState(null);
-  const [loadingFb,   setLoadingFb]   = useState(true);
-  const [fbSortBy,    setFbSortBy]    = useState("newest");
+  // Feedback (admin view only)
+  const [feedbacks,  setFeedbacks]  = useState([]);
+  const [avgRating,  setAvgRating]  = useState(null);
+  const [loadingFb,  setLoadingFb]  = useState(false);
+  const [fbSortBy,   setFbSortBy]   = useState("newest");
 
-  const user    = JSON.parse(localStorage.getItem("user")) || null;
-  const token   = localStorage.getItem("token");
+  const user      = JSON.parse(localStorage.getItem("user")) || null;
+  const token     = localStorage.getItem("token");
   const isStudent = user?.role === "student";
   const isAdmin   = user?.role === "college_admin" || user?.role === "super_admin";
 
   useEffect(() => {
     fetchEvent();
-    fetchFeedbacks();
-    if (token) {
-      checkRegistrationStatus();
-      if (isStudent) fetchMyFeedback();
-    }
+    if (token) checkRegistrationStatus();
+    // Fetch my feedback only for students (for CTA)
+    if (token && isStudent) fetchMyFeedback();
+    // Fetch all feedbacks only for admins
+    if (token && isAdmin) fetchFeedbacks();
   }, [id]);
 
   const fetchEvent = async () => {
@@ -167,13 +160,13 @@ function EventDetails() {
     try {
       const res  = await api.get("/registrations/my");
       const regs = res.data.registrations || res.data || [];
-      setIsRegistered(regs.some((r) => r.event_id?._id === id || r.event_id === id));
+      setIsRegistered(regs.some((r) => r.event_id?._id===id || r.event_id===id));
     } catch { /* silent */ }
   };
 
   const fetchMyFeedback = async () => {
     try {
-      const res = await api.get("/feedback/my");
+      const res   = await api.get("/feedback/my");
       const found = (res.data.feedbacks||[]).find((f) => f.event?._id===id || f.event===id);
       if (found) setMyFeedback(found);
     } catch { /* silent */ }
@@ -192,7 +185,9 @@ function EventDetails() {
     } finally { setRegistering(false); }
   };
 
-  const formatDate = (d) => new Date(d).toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric", weekday:"long" });
+  const formatDate = (d) => new Date(d).toLocaleDateString("en-US", {
+    year:"numeric", month:"long", day:"numeric", weekday:"long",
+  });
 
   const getCategoryColor = (cat) => {
     const m = { sports:"bg-green-100 text-green-800", hackathon:"bg-blue-100 text-blue-800", cultural:"bg-purple-100 text-purple-800", workshop:"bg-orange-100 text-orange-800", seminar:"bg-red-100 text-red-800", technical:"bg-indigo-100 text-indigo-800", social:"bg-pink-100 text-pink-800", other:"bg-gray-100 text-gray-800" };
@@ -203,14 +198,13 @@ function EventDetails() {
   const isFull           = event && event.current_participants >= event.max_participants;
   const canFeedback      = isStudent && isRegistered && isEventCompleted;
 
-  // Sorted feedbacks
+  // Sorted feedbacks for admin
   const sortedFbs = [...feedbacks].sort((a,b)=>{
     if(fbSortBy==="top_rated")  return (b.rating||0)-(a.rating||0);
     if(fbSortBy==="most_liked") return (b.likes?.length||0)-(a.likes?.length||0);
     return new Date(b.createdAt)-new Date(a.createdAt);
   });
 
-  // Rating distribution
   const dist = {1:0,2:0,3:0,4:0,5:0};
   feedbacks.filter((f)=>f.rating>0).forEach((f)=>{ if(f.rating>=1&&f.rating<=5) dist[f.rating]++; });
   const totalRated = Object.values(dist).reduce((a,b)=>a+b,0);
@@ -257,8 +251,8 @@ function EventDetails() {
                         {event.status}
                       </span>
                     )}
-                    {/* Average rating badge */}
-                    {avgRating && (
+                    {/* Admin-only: avg rating badge in title area */}
+                    {isAdmin && avgRating && (
                       <span className="flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-full text-xs font-bold text-yellow-700">
                         <FaStar className="text-yellow-400"/> {avgRating} ({totalRated} reviews)
                       </span>
@@ -277,7 +271,7 @@ function EventDetails() {
                     <div>
                       <p className="font-medium">Date & Time</p>
                       <p className="text-sm text-gray-600">{formatDate(event.start_date)}</p>
-                      {event.end_date && event.end_date !== event.start_date && (
+                      {event.end_date && event.end_date!==event.start_date && (
                         <p className="text-sm text-gray-600">to {formatDate(event.end_date)}</p>
                       )}
                     </div>
@@ -295,7 +289,9 @@ function EventDetails() {
                     <FaUsers className="text-indigo-600 mt-1 flex-shrink-0"/>
                     <div>
                       <p className="font-medium">Participants</p>
-                      <p className="text-sm text-gray-600">{event.current_participants||0} / {event.max_participants} registered</p>
+                      <p className="text-sm text-gray-600">
+                        {event.current_participants||0} / {event.max_participants} registered
+                      </p>
                       {isFull && <p className="text-xs text-red-500 font-semibold mt-1">Event is full</p>}
                     </div>
                   </div>
@@ -311,7 +307,7 @@ function EventDetails() {
                 </div>
               </div>
 
-              {/* Register / Registered section */}
+              {/* Register / Registered */}
               <div className="border-t pt-6">
                 {isRegistered ? (
                   <div className="bg-green-50 border border-green-200 rounded-xl p-5 flex flex-wrap items-center gap-4">
@@ -320,16 +316,16 @@ function EventDetails() {
                       <p className="font-bold text-green-800">You're registered for this event!</p>
                       <p className="text-sm text-green-700 mt-0.5">Check your notifications for approval status.</p>
                     </div>
-                    {/* Feedback CTA */}
+                    {/* Feedback CTA — students only, after event ends */}
                     {canFeedback && (
                       myFeedback ? (
                         <Link to={`/student/feedback/${id}`} state={{ existingFeedback:myFeedback, event }}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-white font-bold rounded-xl text-sm transition-all shadow-sm">
+                          className="flex items-center gap-2 px-5 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-white font-bold rounded-xl text-sm transition-all shadow-sm flex-shrink-0">
                           <FaStar/> Edit Review
                         </Link>
                       ) : (
                         <Link to={`/student/feedback/${id}`} state={{ event }}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-xl text-sm transition-all shadow-sm">
+                          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-xl text-sm transition-all shadow-sm flex-shrink-0">
                           <FaStar/> Give Feedback
                         </Link>
                       )
@@ -351,18 +347,18 @@ function EventDetails() {
                     </button>
                   </div>
                 ) : null}
-              </div>
 
-              {/* My feedback preview */}
-              {myFeedback && (
-                <div className="mt-4 flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-3">
-                  <Stars value={myFeedback.rating}/>
-                  <span className="text-sm text-yellow-700 font-medium flex-1">
-                    Your review: "{myFeedback.comment?.slice(0,80)}{myFeedback.comment?.length>80?"…":""}"
-                  </span>
-                  <FaCheckCircle className="text-yellow-500 flex-shrink-0"/>
-                </div>
-              )}
+                {/* My feedback preview */}
+                {myFeedback && (
+                  <div className="mt-4 flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-3">
+                    <Stars value={myFeedback.rating}/>
+                    <span className="text-sm text-yellow-700 font-medium flex-1">
+                      Your review: "{myFeedback.comment?.slice(0,80)}{myFeedback.comment?.length>80?"…":""}"
+                    </span>
+                    <FaCheckCircle className="text-yellow-500 flex-shrink-0"/>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -386,78 +382,74 @@ function EventDetails() {
             </div>
           )}
 
-          {/* ── STUDENT FEEDBACK SECTION ──────────────────────────── */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <FaStar className="text-yellow-400"/>
-                Student Feedback
-                <span className="text-base font-semibold text-gray-400">({feedbacks.length})</span>
-              </h3>
-              {feedbacks.length>1 && (
-                <select value={fbSortBy} onChange={(e)=>setFbSortBy(e.target.value)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 bg-white focus:ring-2 focus:ring-indigo-100 outline-none">
-                  <option value="newest">Newest First</option>
-                  <option value="top_rated">Top Rated</option>
-                  <option value="most_liked">Most Liked</option>
-                </select>
-              )}
-            </div>
-
-            {/* Rating summary */}
-            {avgRating && totalRated>0 && (
-              <div className="flex flex-col sm:flex-row items-start gap-6 mb-6 p-5 bg-gray-50 rounded-xl">
-                {/* Overall */}
-                <div className="flex flex-col items-center px-6 py-2 flex-shrink-0">
-                  <div className="text-5xl font-black text-gray-900">{avgRating}</div>
-                  <Stars value={parseFloat(avgRating)} size="text-xl"/>
-                  <div className="text-xs text-gray-400 mt-1 font-medium">{totalRated} review{totalRated!==1?"s":""}</div>
-                </div>
-                {/* Bar chart */}
-                <div className="flex-1 space-y-2 w-full">
-                  {[5,4,3,2,1].map((s)=>(
-                    <RatingBar key={s} star={s} count={dist[s]} total={totalRated}/>
-                  ))}
-                </div>
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* ADMIN ONLY — Student Feedback Section                      */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          {isAdmin && (
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+              {/* Admin notice */}
+              <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 mb-5">
+                <FaUserShield className="text-indigo-500 flex-shrink-0"/>
+                <p className="text-sm font-semibold text-indigo-700">
+                  Admin View — Student feedback submitted for this event
+                </p>
               </div>
-            )}
 
-            {/* Feedback cards */}
-            {loadingFb ? (
-              <div className="space-y-4">
-                {[1,2].map((i)=><div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse"/>)}
-              </div>
-            ) : sortedFbs.length===0 ? (
-              <div className="text-center py-10 text-gray-400">
-                <FaStar className="text-5xl mx-auto mb-3 opacity-20"/>
-                <p className="font-semibold text-gray-500">No feedback yet</p>
-                {canFeedback && (
-                  <Link to={`/student/feedback/${id}`} state={{ event }}
-                    className="mt-3 inline-block px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl text-sm hover:bg-indigo-700 transition-all">
-                    Be the first to review →
-                  </Link>
+              <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <FaStar className="text-yellow-400"/>
+                  Student Feedback
+                  <span className="text-base font-semibold text-gray-400">({feedbacks.length})</span>
+                </h3>
+                {feedbacks.length>1 && (
+                  <select value={fbSortBy} onChange={(e)=>setFbSortBy(e.target.value)}
+                    className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-100">
+                    <option value="newest">Newest First</option>
+                    <option value="top_rated">Top Rated</option>
+                    <option value="most_liked">Most Liked</option>
+                  </select>
                 )}
               </div>
-            ) : (
-              <div className="grid sm:grid-cols-2 gap-4">
-                {sortedFbs.map((fb)=>(
-                  <FeedbackCard key={fb._id} fb={fb} currentUserId={user?.id||user?._id}/>
-                ))}
-              </div>
-            )}
 
-            {/* CTA for eligible students */}
-            {canFeedback && !myFeedback && feedbacks.length>0 && (
-              <div className="mt-5 pt-5 border-t border-gray-100 text-center">
-                <Link to={`/student/feedback/${id}`} state={{ event }}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                  <FaStar/> Write Your Review
-                </Link>
-              </div>
-            )}
-          </div>
+              {/* Rating summary */}
+              {avgRating && totalRated>0 && (
+                <div className="flex flex-col sm:flex-row items-start gap-6 mb-5 p-5 bg-gray-50 rounded-xl">
+                  <div className="flex flex-col items-center px-6 py-2 flex-shrink-0">
+                    <div className="text-5xl font-black text-gray-900">{avgRating}</div>
+                    <Stars value={parseFloat(avgRating)} size="text-xl"/>
+                    <div className="text-xs text-gray-400 mt-1 font-medium">{totalRated} review{totalRated!==1?"s":""}</div>
+                  </div>
+                  <div className="flex-1 space-y-2 w-full">
+                    {[5,4,3,2,1].map((s)=>(
+                      <RatingBar key={s} star={s} count={dist[s]} total={totalRated}/>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* ── DISCUSSION / COMMENTS ─────────────────────────────── */}
+              {/* Feedback cards */}
+              {loadingFb ? (
+                <div className="space-y-3">
+                  {[1,2].map((i)=><div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse"/>)}
+                </div>
+              ) : sortedFbs.length===0 ? (
+                <div className="text-center py-10 text-gray-400">
+                  <FaStar className="text-5xl mx-auto mb-3 opacity-20"/>
+                  <p className="font-semibold text-gray-500">No student feedback yet for this event</p>
+                </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {sortedFbs.map((fb)=>(
+                    <FeedbackCard key={fb._id} fb={fb} currentUserId={user?.id||user?._id}/>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* COMMENTS — shown to EVERYONE (students + admins)           */}
+          {/* ══════════════════════════════════════════════════════════ */}
           <EventComments eventId={id}/>
 
         </div>
