@@ -12,16 +12,14 @@ import chatbotRoutes from './routes/chatbot.routes.js';
 import eventRoutes from './routes/event.routes.js';
 import registrationRoutes from './routes/registration.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import feedbackRoutes from './routes/feedback.routes.js';
+import commentRoutes from './routes/comment.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import feedbackRoutes from "./routes/feedback.routes.js";
-import commentRoutes  from "./routes/comment.routes.js";
-
-
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname  = path.dirname(__filename);
 
 const app = express();
 
@@ -29,7 +27,7 @@ connectDB();
 
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
+  credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -37,26 +35,26 @@ app.use(cookieParser());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// ── Health check ──────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.json({
     success: true,
     message: 'CampusEventHub API is running',
     version: '1.0.0',
-    features: ['Authentication', 'User Management', 'AI Chatbot', 'Events', 'Registrations', 'Notifications']
   });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/chatbot', chatbotRoutes);
-app.use('/api/events', eventRoutes);
+// ── Routes ────────────────────────────────────────────────────────────────────
+app.use('/api/auth',          authRoutes);
+app.use('/api/users',         userRoutes);
+app.use('/api/chatbot',       chatbotRoutes);
+app.use('/api/events',        eventRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use("/api/feedback",  feedbackRoutes);
-app.use("/api/comments",  commentRoutes);
+app.use('/api/feedback',      feedbackRoutes);
+app.use('/api/comments',      commentRoutes);
 
-
-
+// ── Global error handler ──────────────────────────────────────────────────────
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
@@ -67,6 +65,8 @@ app.listen(PORT, () => {
   console.log(`🎉 Events:        Enabled at /api/events`);
   console.log(`📋 Registrations: Enabled at /api/registrations`);
   console.log(`🔔 Notifications: Enabled at /api/notifications`);
+  console.log(`💬 Feedback:      Enabled at /api/feedback`);
+  console.log(`🗨️  Comments:      Enabled at /api/comments`);
   console.log(`🖼️  Uploads:       Served at /uploads`);
 });
 
