@@ -44,11 +44,17 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use('/api/auth', require('./routes/authRoutes'));  // Example
-app.use('/api/events', require('./routes/event.routes'));  // ← ADD THIS
+// ── Routes ────────────────────────────────────────────────────────────────────
+app.use('/api/auth',          authRoutes);
+app.use('/api/users',         userRoutes);
+app.use('/api/chatbot',       chatbotRoutes);
+app.use('/api/events',        eventRoutes);
+app.use('/api/registrations', registrationRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/feedback',      feedbackRoutes);
+app.use('/api/comments',      commentRoutes);
 
-app.use('/api/events', require('./routes/event.routes'));
-
+// ── Global error handler ──────────────────────────────────────────────────────
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;

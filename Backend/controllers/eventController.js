@@ -112,4 +112,3 @@ export const deleteEvent = async (req, res) => {
 
 
 
-

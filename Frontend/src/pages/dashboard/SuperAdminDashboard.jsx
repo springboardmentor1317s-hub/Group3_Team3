@@ -13,7 +13,6 @@ import {
   FaEye,
   FaClock,
   FaBell,
-  FaStar,
 } from "react-icons/fa";
 
 function SuperAdminDashboard() {
@@ -25,6 +24,7 @@ function SuperAdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
 
+  // ✅ FIXED: was hardcoded numbers + fake setTimeout
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -183,7 +183,6 @@ function SuperAdminDashboard() {
                   </p>
                 </div>
               </Link>
-
               <Link
                 to="/super-admin/reports"
                 className="flex items-center gap-4 w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
@@ -192,20 +191,6 @@ function SuperAdminDashboard() {
                 <div>
                   <h4 className="font-bold text-xl">View Reports</h4>
                   <p className="text-indigo-100 text-sm">Analytics dashboard</p>
-                </div>
-              </Link>
-
-              {/* ✅ NEW: Feedback Analytics */}
-              <Link
-                to="/super-admin/feedback"
-                className="flex items-center gap-4 w-full bg-gradient-to-r from-pink-500 to-rose-600 text-white p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
-              >
-                <FaStar className="text-3xl flex-shrink-0" />
-                <div>
-                  <h4 className="font-bold text-xl">Feedback Analytics</h4>
-                  <p className="text-pink-100 text-sm">
-                    View ratings & reviews across all events
-                  </p>
                 </div>
               </Link>
             </div>

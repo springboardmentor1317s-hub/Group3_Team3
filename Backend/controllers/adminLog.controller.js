@@ -1,5 +1,6 @@
 import AdminLog from '../models/AdminLog.js';
 
+/* Helper used internally by other controllers to log admin actions */
 export const createLog = async (userId, action, targetType = 'system', targetId = null, ip = null, details = null) => {
   try {
     await AdminLog.create({
@@ -15,6 +16,7 @@ export const createLog = async (userId, action, targetType = 'system', targetId 
   }
 };
 
+/* GET /api/admin/logs */
 export const getLogs = async (req, res) => {
   try {
     const { target_type, user_id, page = 1, limit = 20 } = req.query;
