@@ -45,7 +45,18 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  const links = roleLinks[user?.role] || [];
+  const isActive = (path) => location.pathname === path;
+
+  // ✅ FIXED (using role instead of accountType)
+ // Navbar.jsx getDashboardPath() - EXACT:
+const getDashboardPath = () => {
+  const role = user?.role?.toLowerCase().trim();
+  if (role.includes("student")) return "/student-dashboard";
+  if (role.includes("college")) return "/collegeAdmin-dashboard";  // ← FLEXIBLE MATCH
+  if (role.includes("super")) return "/superAdmin-dashboard";
+  return "/event-organizer";
+};
+
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -64,38 +75,128 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* ── Desktop nav links (logged-in users) ────────────────── */}
-        {user && (
-          <div className="hidden md:flex items-center gap-1">
-            {links.map((l) => (
-              <Link key={l.to} to={l.to}
-                className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  location.pathname === l.to
-                    ? "bg-indigo-50 text-indigo-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`}>
-                {l.label}
-              </Link>
-            ))}
-          </div>
-        )}
+            {/* Desktop Navigation - 3 BUTTONS */}
+<div className="hidden md:flex items-center justify-center flex-1 gap-3">
+  {token && (
+    <>
+      {/* 1. HOME BUTTON */}
+      <Link
+        to="/"
+        className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-base transition-all duration-300
+          ${isActive("/") 
+            ? "bg-white text-purple-600 border-2 border-purple-600 shadow-md"
+            : "bg-white text-purple-600 border-2 border-purple-400 hover:border-purple-600"
+          }`}
+      >
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10.67 2.292a1 1 0 00-1.34 0l-7 7 1.41 1.41L10 4.42l6.93 6.29 1.41-1.41-7-7z"/>
+        </svg>
+        <span>Home</span>
+      </Link>
 
-        {/* ── Right side ─────────────────────────────────────────── */}
-        <div className="flex items-center gap-3">
-          {user ? (
+      {/* 2. MY EVENTS BUTTON */}
+      <Link
+        to="/my-events"
+        className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-base transition-all duration-300
+          ${isActive("/my-events")
+            ? "bg-white text-purple-600 border-2 border-purple-600 shadow-md"
+            : "bg-white text-purple-600 border-2 border-purple-400 hover:border-purple-600"
+          }`}
+      >
+        <FaCalendar />
+        <span>My Events</span>
+      </Link>
+
+      {/* 3. DASHBOARD BUTTON */}
+      <Link
+        to={getDashboardPath()}
+        className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-base transition-all duration-300
+          ${
+            isActive("/student-dashboard") ||
+            isActive("/collegeAdmin-dashboard") ||
+            isActive("/superAdmin-dashboard") ||
+            isActive("/event-organizer")
+              ? "bg-white text-purple-600 border-2 border-purple-600 shadow-md"
+              : "bg-white text-purple-600 border-2 border-purple-400 hover:border-purple-600"
+          }`}
+      >
+        <FaChartLine />
+        <span>Dashboard</span>
+      </Link>
+    </>
+  )}
+</div>
+
+
+            {/* Desktop Right Section */}
+            <div className="hidden md:flex items-center gap-4">
+              {token ? (
+                <>
+                  {/* Avatar */}
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    {getInitials(user?.name)}
+                  </div>
+
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <FaRightFromBracket />
+                    <span className="text-sm">Logout</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold text-sm text-purple-600 border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300"
+                  >
+                    <FaRightToBracket />
+                    <span>Login</span>
+                  </Link>
+
+                  <Link
+                    to="/register"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full shadow-lg transition-all duration-300"
+                  >
+                    <FaUserPlus />
+                    <span>Register</span>
+                  </Link>
+                </>
+              )}
+            </div>
+            </div>
+            </div>
+
+      </nav>
+
+      {/* Mobile Overlay */}
+      {isMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Menu */}
+      <div
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 md:hidden
+        transform transition-transform duration-300 ease-in-out
+        ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}
+      >
+        <div className="flex flex-col h-full p-6">
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="self-end p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+          >
+            <FaXmark className="text-2xl" />
+          </button>
+
+          {token && (
             <>
-              {/* Notifications bell */}
-              <Link
-                to={user.role==="student" ? "/student/notifications" : "/admin/notifications"}
-                className="relative p-2 rounded-xl hover:bg-gray-50 transition-all"
-              >
-                <FaBell className="text-gray-500 text-lg" />
-              </Link>
-
-              {/* User avatar + name */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-xs">
-                  {user.name?.[0]?.toUpperCase()}
+              <div className="flex items-center gap-3 px-4 py-3 mt-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                  {getInitials(user?.name)}
                 </div>
                 <div className="text-left">
                   <div className="text-xs font-bold text-gray-800 leading-tight">{user.name?.split(" ")[0]}</div>

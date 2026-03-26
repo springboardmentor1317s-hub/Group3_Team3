@@ -2,34 +2,15 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Events from "./pages/Events";
-import EventDetails from "./pages/event/EventDetails";
-
-// Student
-import StudentDashboard from "./pages/dashboard/StudentDashboard";
-import StudentNotifications from "./pages/dashboard/StudentNotifications";
-import StudentProfile from "./pages/profiledit/StudentProfile";
-import StudentEvents from "./pages/studentevents/StudentEvents";
-import MyRegistrations from "./pages/studentevents/MyRegistrations";
-
-// College Admin
-import CollegeAdminDashboard from "./pages/dashboard/CollegeAdminDashboard";
-import AdminProfile from "./pages/profiledit/AdminProfile";
-import CreateEvent from "./pages/event/CreateEvent";
-import EditEvent from "./pages/event/EditEvent";
-import CollegeEvents from "./pages/event/CollegeEvents";
-import ManageRegistrations from "./pages/event/ManageRegistrations";
-import CollegeEventDetails from "./pages/event/CollegeEventDetails";
-
-// Super Admin
-import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
-import SuperAdminProfile from "./pages/profiledit/SuperAdminProfile";
-import PendingColleges from "./pages/superadmin/PendingColleges";
-import PendingEvents from "./pages/superadmin/PendingEvents";
-import AllColleges from "./pages/superadmin/AllColleges";
-import CollegeDetails from "./pages/superadmin/CollegeDetails";
-import Analytics from "./pages/superadmin/Analytics";
-import AllEvents from "./pages/superadmin/AllEvents";
+import StudentDashboard from "./pages/StudentDashboard";
+import CollegeAdminDashboard from "./pages/CollegeAdminDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+// import Events from "./pages/Events";
+// import EventDetails from "./pages/EventDetails";
+// import CreateEvent from "./pages/CreateEvent";
+// import EditEvent from "./pages/EditEvent";
+// import AdminDashboard from "./pages/AdminDashboard";
+// import ManageRegistrations from "./pages/ManageRegistrations";
 
 // Feedback
 import EventFeedback from "./pages/student/EventFeedback";
@@ -46,34 +27,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/events/:id" element={<EventDetails />} />
 
-        {/* ── Student ───────────────────────────────────────────────────── */}
-        <Route
-          path="/student/dashboard"
-          element={
-            <ProtectedRoute role="student">
-              <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/events"
-          element={
-            <ProtectedRoute role="student">
-              <StudentEvents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/registrations"
-          element={
-            <ProtectedRoute role="student">
-              <MyRegistrations />
-            </ProtectedRoute>
-          }
-        />
+        {/* ---------- General Protected Routes ----------
         <Route
           path="/student/notifications"
           element={
@@ -174,74 +129,9 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/super-admin/profile"
-          element={
-            <ProtectedRoute role="super_admin">
-              <SuperAdminProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/colleges"
-          element={
-            <ProtectedRoute role="super_admin">
-              <AllColleges />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/colleges/:id"
-          element={
-            <ProtectedRoute role="super_admin">
-              <CollegeDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/pending-colleges"
-          element={
-            <ProtectedRoute role="super_admin">
-              <PendingColleges />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/pending-events"
-          element={
-            <ProtectedRoute role="super_admin">
-              <PendingEvents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/reports"
-          element={
-            <ProtectedRoute role="super_admin">
-              <Analytics />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/super-admin/all-events"
-          element={
-            <ProtectedRoute role="super_admin">
-              <AllEvents />
-            </ProtectedRoute>
-          }
-        />
-        {/* ✅ NEW: Super Admin Feedback Analytics */}
-        <Route
-          path="/super-admin/feedback"
-          element={
-            <ProtectedRoute role="super_admin">
-              <FeedbackAnalytics />
-            </ProtectedRoute>
-          }
-        />
 
-        {/* 404 */}
-        <Route
+        {/* ---------- 404 Fallback ---------- */}
+         {/* <Route
           path="*"
           element={
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex items-center justify-center">
