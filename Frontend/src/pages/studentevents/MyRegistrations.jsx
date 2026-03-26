@@ -1,4 +1,4 @@
-// src/pages/studentevents/MyRegistrations.jsx
+// src/pages/student/MyRegistrations.jsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
@@ -11,21 +11,19 @@ import {
   FaList,
   FaSearch,
   FaMapMarkerAlt,
-  FaStar,
-  FaCheckCircle,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 function MyRegistrations() {
-  const navigate    = useNavigate();
-  const user        = getUser();
+  const navigate = useNavigate();
+  const user = getUser();
 
   const [registrations, setRegistrations] = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [search,        setSearch]        = useState("");
-  const [filterStatus,  setFilterStatus]  = useState("all");
-  const [myFeedbacks,   setMyFeedbacks]   = useState({}); // eventId → feedback
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
 
+  // ✅ FIXED: was /students/:id/registrations → correct endpoint is /registrations/my
   const fetchRegistrations = async () => {
     try {
       setLoading(true);
@@ -39,39 +37,23 @@ function MyRegistrations() {
     }
   };
 
-  const fetchMyFeedbacks = async () => {
-    try {
-      const res = await api.get("/feedback/my");
-      const map = {};
-      (res.data.feedbacks || []).forEach((f) => {
-        const eid = f.event?._id || f.event;
-        if (eid) map[eid] = f;
-      });
-      setMyFeedbacks(map);
-    } catch { /* silent */ }
-  };
-
   useEffect(() => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     fetchRegistrations();
-    fetchMyFeedbacks();
   }, []);
 
-  // ── helpers ───────────────────────────────────────────────────────────────
-  const isCompleted = (event) =>
-    event?.end_date && new Date(event.end_date) < new Date();
-
-  const canFeedback = (reg) =>
-    reg.status === "approved" && isCompleted(reg.event_id);
-
+  // ✅ FIXED: was reading reg.studentName / reg.eventTitle (flat fields)
+  // Now reads from populated reg.event_id object
   const filteredRegistrations = registrations.filter((reg) => {
-    const title       = reg.event_id?.title || "";
-    const matchSearch = title.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === "all" || reg.status === filterStatus;
-    return matchSearch && matchStatus;
+    const title = reg.event_id?.title || "";
+    const matchesSearch = title.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = filterStatus === "all" || reg.status === filterStatus;
+    return matchesSearch && matchesStatus;
   });
 
-  // ── Status badge ──────────────────────────────────────────────────────────
   const StatusBadge = ({ status }) => {
     if (status === "approved")
       return (
@@ -92,18 +74,6 @@ function MyRegistrations() {
     );
   };
 
-  // ── Star preview ──────────────────────────────────────────────────────────
-  const StarPreview = ({ rating }) => (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <FaStar
-          key={s}
-          className={`text-xs ${s <= rating ? "text-yellow-400" : "text-slate-200"}`}
-        />
-      ))}
-    </div>
-  );
-
   if (!user) return null;
 
   return (
@@ -111,7 +81,6 @@ function MyRegistrations() {
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 py-8 px-4">
         <div className="max-w-5xl mx-auto">
-
           {/* Header */}
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <div className="flex items-center gap-4">
@@ -122,12 +91,16 @@ function MyRegistrations() {
                 <FaArrowLeft className="text-slate-700" />
               </Link>
               <div>
-                <h1 className="text-4xl font-black text-slate-900">My Registrations</h1>
-                <p className="text-slate-500 mt-1">Track all your event registrations and give feedback</p>
+                <h1 className="text-4xl font-black text-slate-900">
+                  My Registrations
+                </h1>
+                <p className="text-slate-500 mt-1">
+                  Track all your event registrations
+                </p>
               </div>
             </div>
             <button
-              onClick={() => { fetchRegistrations(); fetchMyFeedbacks(); }}
+              onClick={fetchRegistrations}
               className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-2xl shadow hover:shadow-lg transition"
             >
               <FaList /> Refresh
@@ -167,13 +140,18 @@ function MyRegistrations() {
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-28 bg-white rounded-3xl shadow animate-pulse" />
+                <div
+                  key={i}
+                  className="h-28 bg-white rounded-3xl shadow animate-pulse"
+                />
               ))}
             </div>
           ) : filteredRegistrations.length === 0 ? (
             <div className="bg-white rounded-3xl p-16 shadow text-center text-slate-400">
               <FaList className="text-6xl mx-auto mb-4 opacity-20" />
-              <h2 className="text-2xl font-bold text-slate-700 mb-2">No registrations found</h2>
+              <h2 className="text-2xl font-bold text-slate-700 mb-2">
+                No registrations found
+              </h2>
               <p className="mb-6">Register for events to see them here.</p>
               <Link
                 to="/events"
@@ -185,12 +163,7 @@ function MyRegistrations() {
           ) : (
             <div className="space-y-4">
               {filteredRegistrations.map((reg) => {
-                const event      = reg.event_id || {};
-                const completed  = isCompleted(event);
-                const showFbCTA  = canFeedback(reg);
-                const hasFb      = !!myFeedbacks[event._id];
-                const fb         = myFeedbacks[event._id];
-
+                const event = reg.event_id || {};
                 return (
                   <div
                     key={reg._id}
@@ -202,7 +175,9 @@ function MyRegistrations() {
                           <FaCalendarAlt />
                         </div>
                         <div>
-                          <h3 className="font-black text-lg text-slate-900">{event.title || "Event"}</h3>
+                          <h3 className="font-black text-lg text-slate-900">
+                            {event.title || "Event"}
+                          </h3>
                           <div className="flex flex-wrap gap-3 text-xs text-slate-500 mt-1">
                             {event.category && (
                               <span className="capitalize bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-semibold">
@@ -211,37 +186,28 @@ function MyRegistrations() {
                             )}
                             {event.location && (
                               <span className="flex items-center gap-1">
-                                <FaMapMarkerAlt /> {event.location}
+                                <FaMapMarkerAlt />
+                                {event.location}
                               </span>
                             )}
                             {event.start_date && (
                               <span className="flex items-center gap-1">
                                 <FaClock />
-                                {new Date(event.start_date).toLocaleDateString("en-IN")}
-                              </span>
-                            )}
-                            {completed && (
-                              <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-semibold">
-                                ✅ Completed
+                                {new Date(event.start_date).toLocaleDateString(
+                                  "en-IN",
+                                )}
                               </span>
                             )}
                           </div>
-                          {/* Feedback preview inline */}
-                          {hasFb && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <StarPreview rating={fb.rating} />
-                              <span className="text-xs text-slate-400 italic">
-                                "{fb.comment?.slice(0, 50)}{fb.comment?.length > 50 ? "…" : ""}"
-                              </span>
-                            </div>
-                          )}
                           <p className="text-xs text-slate-400 mt-1">
-                            Registered on {new Date(reg.createdAt).toLocaleDateString("en-IN")}
+                            Registered on{" "}
+                            {new Date(reg.createdAt).toLocaleDateString(
+                              "en-IN",
+                            )}
                           </p>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
+                      <div className="flex items-center gap-3 flex-shrink-0">
                         <StatusBadge status={reg.status} />
                         <Link
                           to={`/events/${event._id}`}
@@ -249,43 +215,12 @@ function MyRegistrations() {
                         >
                           View →
                         </Link>
-
-                        {/* ── Feedback button ────────────────────────────── */}
-                        {showFbCTA && (
-                          hasFb ? (
-                            <Link
-                              to={`/student/feedback/${event._id}`}
-                              state={{ existingFeedback: fb, event }}
-                              className="flex items-center gap-1.5 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white font-bold rounded-xl text-sm transition-all shadow"
-                            >
-                              <FaStar className="text-xs" />
-                              Edit Review
-                            </Link>
-                          ) : (
-                            <Link
-                              to={`/student/feedback/${event._id}`}
-                              state={{ event }}
-                              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-xl text-sm transition-all shadow"
-                            >
-                              <FaStar className="text-xs" />
-                              Give Feedback
-                            </Link>
-                          )
-                        )}
-
-                        {/* Pending hint */}
-                        {reg.status === "approved" && !completed && (
-                          <span className="text-xs text-slate-400 italic">
-                            Feedback after event ends
-                          </span>
-                        )}
                       </div>
                     </div>
-
-                    {/* Rejection note */}
                     {reg.status === "rejected" && (
                       <div className="px-6 pb-4 text-xs text-red-500">
-                        Your registration was not approved. Please contact the event organizer.
+                        Your registration was not approved. Please contact the
+                        event organizer.
                       </div>
                     )}
                   </div>
@@ -293,7 +228,6 @@ function MyRegistrations() {
               })}
             </div>
           )}
-
         </div>
       </div>
     </>

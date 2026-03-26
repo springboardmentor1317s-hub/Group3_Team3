@@ -1,31 +1,15 @@
 import Notification from '../models/Notification.js';
 
-/* GET /api/notifications — get logged-in user's notifications */
+/* GET /api/notifications — student gets their own notifications */
 export const getMyNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ recipient: req.user._id })
-      .populate('relatedEvent', 'title category')
-      .populate('sender', 'name')
+    const notifications = await Notification.find({ user_id: req.user._id })
+      .populate('event_id', 'title category')
       .sort({ createdAt: -1 });
 
-    const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-    res.json({ success: true, notifications, unreadCount });
+    res.json({ success: true, notifications });
   } catch (error) {
     console.error('Get notifications error:', error);
-    res.status(500).json({ success: false, message: 'Server Error' });
-  }
-};
-
-/* PUT /api/notifications/read-all — mark ALL as read (must be BEFORE /:id) */
-export const markAllAsRead = async (req, res) => {
-  try {
-    await Notification.updateMany(
-      { recipient: req.user._id, isRead: false },
-      { isRead: true, readAt: new Date() }
-    );
-    res.json({ success: true, message: 'All notifications marked as read' });
-  } catch (error) {
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
@@ -33,32 +17,30 @@ export const markAllAsRead = async (req, res) => {
 /* PUT /api/notifications/:id/read — mark one as read */
 export const markAsRead = async (req, res) => {
   try {
-    const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, recipient: req.user._id },
-      { isRead: true, readAt: new Date() },
-      { new: true }
+    await Notification.findOneAndUpdate(
+      { _id: req.params.id, user_id: req.user._id },
+      { read: true }
     );
-
-    if (!notification) {
-      return res.status(404).json({ success: false, message: 'Notification not found' });
-    }
-
-    res.json({ success: true, message: 'Marked as read', notification });
+    res.json({ success: true, message: 'Marked as read' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 
-/* Helper — called by other controllers to create a notification */
-export const createNotification = async (recipientId, type, title, message, eventId = null) => {
+/* PUT /api/notifications/read-all — mark all as read */
+export const markAllAsRead = async (req, res) => {
   try {
-    await Notification.create({
-      recipient: recipientId,
-      type,
-      title,
-      message,
-      relatedEvent: eventId,
-    });
+    await Notification.updateMany({ user_id: req.user._id, read: false }, { read: true });
+    res.json({ success: true, message: 'All marked as read' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
+/* Helper — called by registration controller when status changes */
+export const createNotification = async (userId, type, title, message, eventId = null) => {
+  try {
+    await Notification.create({ user_id: userId, type, title, message, event_id: eventId });
   } catch (err) {
     console.error('Create notification error:', err.message);
   }
