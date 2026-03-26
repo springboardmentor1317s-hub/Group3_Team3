@@ -153,4 +153,4 @@ const StudentNotifications = () => {
   );
 };
 
-export default StudentNotifications;
+export default StudentNotification;
