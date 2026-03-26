@@ -1,246 +1,154 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { removeToken, getToken } from "../services/auth";
-import { toast } from "react-toastify";
-import {
-  FaCalendar,
-  FaChartLine,
-  FaRightFromBracket,
-  FaRightToBracket,
-  FaUserPlus,
-  FaBars,
-  FaXmark,
-} from "react-icons/fa6";
+// src/components/Navbar.jsx
 import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { FaGraduationCap, FaBars, FaTimes, FaBell, FaSignOutAlt } from "react-icons/fa";
 
-function Navbar() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const token = getToken();
-  const user = JSON.parse(localStorage.getItem("user")) || null;
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+// ── Get logged-in user from localStorage (your existing auth pattern) ─────────
+const getUser = () => {
+  try { return JSON.parse(localStorage.getItem("user")) || null; }
+  catch { return null; }
+};
+
+// ── Role-based nav links ──────────────────────────────────────────────────────
+const roleLinks = {
+  student: [
+    { to: "/student/events",         label: "Browse Events" },
+    { to: "/student/dashboard",      label: "Dashboard"     },
+    { to: "/student/registrations",  label: "My Registrations" },
+    { to: "/student/notifications",  label: "Notifications" },
+  ],
+  college_admin: [
+    { to: "/events",                          label: "Events"        },
+    { to: "/admin/dashboard",                 label: "Dashboard"     },
+    { to: "/admin/dashboard/create-event",    label: "Create Event"  },
+    { to: "/admin/dashboard/events",          label: "My Events"     },
+    { to: "/admin/feedback-analytics",        label: "Feedback"      },
+  ],
+  super_admin: [
+    { to: "/events",                    label: "Events"         },
+    { to: "/super-admin/dashboard",     label: "Dashboard"      },
+    { to: "/super-admin/colleges",      label: "Colleges"       },
+    { to: "/super-admin/all-events",    label: "All Events"     },
+    { to: "/super-admin/reports",       label: "Analytics"      },
+  ],
+};
+
+export default function Navbar() {
+  const user          = getUser();
+  const location      = useLocation();
+  const navigate      = useNavigate();
+  const [menuOpen, setMenu] = useState(false);
 
   const handleLogout = () => {
-    removeToken();
-    localStorage.removeItem("role");
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
-    toast.info("Logged out successfully");
-    navigate("/");
-    setIsMenuOpen(false);
+    navigate("/login");
   };
 
-  const isActive = (path) => location.pathname === path;
-
-  const getDashboardPath = () => {
-    if (user?.accountType === "Student") return "/student/dashboard";
-    if (user?.accountType === "College Admin") return "/admin/dashboard";
-    if (user?.accountType === "Super Admin") return "/super-admin/dashboard";
-    return "/";
-  };
+  const links = roleLinks[user?.role] || [];
 
   return (
-    <>
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-20">
-            {/* Brand - FIXED */}
-            <Link
-              to="/"
-              className="flex items-center gap-2 text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-2xl font-extrabold"
-            >
-              CampusHub
-            </Link>
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center justify-center flex-1 gap-4">
-              {token && (
-                <>
-                  <Link
-                    to="/events"
-                    className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300
-                      ${
-                        isActive("/events")
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
-                          : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
-                      }`}
-                  >
-                    <FaCalendar className="text-lg" />
-                    <span>Events</span>
-                  </Link>
-
-                  <Link
-                    to={getDashboardPath()}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300
-                      ${
-                        isActive("/user-dashboard") ||
-                        isActive("/admin/dashboard") ||
-                        isActive("/superadmin-dashboard")
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
-                          : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
-                      }`}
-                  >
-                    <FaChartLine className="text-lg" />
-                    <span>Dashboard</span>
-                  </Link>
-                </>
-              )}
-            </div>
-
-            {/* Right Section (Desktop) */}
-            <div className="hidden md:flex items-center gap-4">
-              {token ? (
-                <>
-                  <div className="flex items-center gap-3 pl-3 pr-5 py-2 border border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full shadow-sm">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md uppercase">
-                      {user?.fullName?.charAt(0)}
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-gray-800">
-                        {user?.fullName}
-                      </p>
-                      <p className="text-xs text-gray-500">{user?.accountType}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all"
-                  >
-                    <FaRightFromBracket /> Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="flex items-center gap-2 px-5 py-2 rounded-full border-2 border-indigo-500 text-indigo-600 font-semibold text-sm hover:bg-indigo-50 transition-all"
-                  >
-                    <FaRightToBracket /> Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all"
-                  >
-                    <FaUserPlus /> Register
-                  </Link>
-                </>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="md:hidden p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-            >
-              <FaBars className="text-2xl" />
-            </button>
+        {/* ── Logo + Brand ───────────────────────────────────────── */}
+        <Link to="/" className="flex items-center gap-2.5 group">
+          {/* Logo icon */}
+          <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-indigo-200 group-hover:shadow-lg transition-all duration-300">
+            <FaGraduationCap className="text-white text-lg" />
           </div>
-        </div>
-      </nav>
+          {/* Brand name */}
+          <span className="font-extrabold text-lg tracking-tight">
+            <span className="text-indigo-600">Campus</span>
+            <span className="text-purple-600">Hub</span>
+          </span>
+        </Link>
 
-      {/* Mobile Overlay */}
-      {isMenuOpen && (
-        <div
-          onClick={() => setIsMenuOpen(false)}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
-        />
-      )}
+        {/* ── Desktop nav links (logged-in users) ────────────────── */}
+        {user && (
+          <div className="hidden md:flex items-center gap-1">
+            {links.map((l) => (
+              <Link key={l.to} to={l.to}
+                className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  location.pathname === l.to
+                    ? "bg-indigo-50 text-indigo-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}>
+                {l.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
-      {/* Mobile Menu */}
-      <div
-        className={`fixed top-0 right-0 w-72 h-full bg-white shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out
-          ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}
-      >
-        <div className="flex flex-col h-full p-6">
-          {/* Close Button */}
-          <button
-            onClick={() => setIsMenuOpen(false)}
-            className="self-end p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
-          >
-            <FaXmark className="text-2xl" />
-          </button>
-
-          {/* User Info */}
-          {token && (
+        {/* ── Right side ─────────────────────────────────────────── */}
+        <div className="flex items-center gap-3">
+          {user ? (
             <>
-              <div className="flex items-center gap-3 px-4 py-3 mt-6 bg-indigo-50 rounded-xl border border-indigo-200">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-                  {user?.fullName?.charAt(0)}
+              {/* Notifications bell */}
+              <Link
+                to={user.role==="student" ? "/student/notifications" : "/admin/notifications"}
+                className="relative p-2 rounded-xl hover:bg-gray-50 transition-all"
+              >
+                <FaBell className="text-gray-500 text-lg" />
+              </Link>
+
+              {/* User avatar + name */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-xs">
+                  {user.name?.[0]?.toUpperCase()}
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-semibold text-gray-900 text-sm">
-                    {user?.fullName}
-                  </span>
-                  <span className="text-xs text-gray-600">{user?.accountType}</span>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-gray-800 leading-tight">{user.name?.split(" ")[0]}</div>
+                  <div className="text-[10px] text-gray-400 capitalize">{user.role?.replace("_"," ")}</div>
                 </div>
               </div>
-              <hr className="my-6 border-indigo-200" />
+
+              {/* Logout */}
+              <button onClick={handleLogout}
+                className="flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs transition-all">
+                <FaSignOutAlt/> Logout
+              </button>
+
+              {/* Mobile hamburger */}
+              <button onClick={()=>setMenu(!menuOpen)} className="md:hidden p-2 rounded-xl hover:bg-gray-50">
+                {menuOpen ? <FaTimes className="text-gray-600 text-lg"/> : <FaBars className="text-gray-600 text-lg"/>}
+              </button>
             </>
-          )}
-
-          <nav className="flex flex-col gap-3">
-            {token && (
-              <>
-                <Link
-                  to="/events"
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 px-5 py-3 rounded-lg font-semibold text-sm transition-all
-                    ${
-                      isActive("/events")
-                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
-                        : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
-                    }`}
-                >
-                  <FaCalendar /> Events
-                </Link>
-                <Link
-                  to={getDashboardPath()}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-3 px-5 py-3 rounded-lg font-semibold text-sm transition-all
-                    ${
-                      isActive("/user-dashboard") ||
-                      isActive("/admin-dashboard") ||
-                      isActive("/superadmin-dashboard")
-                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
-                        : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
-                    }`}
-                >
-                  <FaChartLine /> Dashboard
-                </Link>
-              </>
-            )}
-          </nav>
-
-          <hr className="my-6 border-indigo-200" />
-
-          {token ? (
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold text-sm shadow-md hover:shadow-lg transition"
-            >
-              <FaRightFromBracket /> Logout
-            </button>
           ) : (
-            <div className="flex flex-col gap-3">
-              <Link
-                to="/login"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-2 px-5 py-3 rounded-full border-2 border-indigo-500 text-indigo-600 font-semibold text-sm hover:bg-indigo-50 transition"
-              >
-                <FaRightToBracket /> Login
+            /* Public — Login + Register */
+            <div className="flex items-center gap-3">
+              <Link to="/login"
+                className="flex items-center gap-1.5 px-5 py-2.5 border-2 border-indigo-500 text-indigo-600 font-bold rounded-full text-sm hover:bg-indigo-50 transition-all no-underline">
+                🔐 Login
               </Link>
-              <Link
-                to="/register"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold text-sm shadow-md hover:shadow-lg transition"
-              >
-                <FaUserPlus /> Register
+              <Link to="/register"
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-full text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all no-underline">
+                👤 Register
               </Link>
             </div>
           )}
         </div>
       </div>
-    </>
+
+      {/* ── Mobile menu ─────────────────────────────────────────── */}
+      {menuOpen && user && (
+        <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1">
+          {links.map((l) => (
+            <Link key={l.to} to={l.to} onClick={()=>setMenu(false)}
+              className={`block px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                location.pathname===l.to
+                  ? "bg-indigo-50 text-indigo-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}>
+              {l.label}
+            </Link>
+          ))}
+          <button onClick={handleLogout}
+            className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all">
+            🚪 Logout
+          </button>
+        </div>
+      )}
+    </nav>
   );
 }
-
-export default Navbar;

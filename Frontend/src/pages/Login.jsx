@@ -48,9 +48,10 @@ function Login() {
 
       toast.success("Login successful!");
 
-      if (user.accountType === "Super Admin") {
+      // ✅ FIXED: use user.role instead of user.accountType
+      if (user.role === "super_admin") {
         navigate("/super-admin/dashboard");
-      } else if (user.accountType === "College Admin") {
+      } else if (user.role === "college_admin") {
         navigate("/admin/dashboard");
       } else {
         navigate("/student/dashboard");
