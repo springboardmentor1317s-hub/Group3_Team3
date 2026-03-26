@@ -23,9 +23,10 @@ function CollegeAdminDashboard() {
   const [pendingRegistrations, setPendingRegistrations] = useState([]);
   const [pendingLoading, setPendingLoading] = useState(true);
 
+  // ✅ FIXED: filter by college_id so only THIS admin's events are fetched
   const fetchEvents = async () => {
     try {
-      const res = await api.get("/events");
+      const res = await api.get(`/events?college_id=${user._id}`);
       setEvents(res.data.events || []);
     } catch (err) {
       console.error(err);
@@ -34,12 +35,11 @@ function CollegeAdminDashboard() {
     }
   };
 
-  // ✅ FIXED: no /registrations/pending endpoint exists
-  // Instead we fetch registrations per event and filter pending ones
+  // ✅ FIXED: filter by college_id to avoid 403 on other colleges' events
   const fetchPendingRegistrations = async () => {
     try {
       setPendingLoading(true);
-      const eventsRes = await api.get("/events");
+      const eventsRes = await api.get(`/events?college_id=${user._id}`);
       const allEvents = eventsRes.data.events || [];
 
       const allPending = [];
@@ -86,7 +86,6 @@ function CollegeAdminDashboard() {
     }
   };
 
-  // ✅ FIXED: was PUT /registrations/:id/approve
   const handleApprove = async (registrationId) => {
     try {
       await api.put(`/registrations/${registrationId}/status`, {
@@ -100,7 +99,6 @@ function CollegeAdminDashboard() {
     }
   };
 
-  // ✅ FIXED: was PUT /registrations/:id/reject
   const handleReject = async (registrationId) => {
     try {
       await api.put(`/registrations/${registrationId}/status`, {
@@ -213,11 +211,11 @@ function CollegeAdminDashboard() {
               <FaArrowRight className="text-xl" />
             </Link>
             <Link
-              to="/admin/dashboard/events"
+              to="/admin/feedback-analytics"
               className="flex items-center justify-between p-6 bg-white border-2 border-emerald-200 text-emerald-700 rounded-3xl font-bold shadow-lg hover:shadow-xl hover:bg-emerald-50 transition-all"
             >
               <span className="flex items-center gap-3">
-                <FaUsers className="text-xl" /> Manage Registrations
+                <FaUsers className="text-xl" /> Feedback Analytics
               </span>
               <FaArrowRight className="text-xl" />
             </Link>
