@@ -14,6 +14,7 @@ import registrationRoutes from './routes/registration.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import feedbackRoutes from './routes/feedback.routes.js';
 import commentRoutes from './routes/comment.routes.js';
+import superAdminRoutes from "./routes/superadmin.routes.js";
 import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -21,9 +22,10 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
+
 const app = express();
 
-connectDB();
+
 
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -53,21 +55,36 @@ app.use('/api/registrations', registrationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/feedback',      feedbackRoutes);
 app.use('/api/comments',      commentRoutes);
+app.use("/api/superadmin",    superAdminRoutes);
+
 
 // ── Global error handler ──────────────────────────────────────────────────────
 app.use(errorHandler);
 
+const startServer = async () => {
+  try {
+    await connectDB(); // ✅ wait for DB connection
+
+    app.listen(PORT, () => {
+      console.log(`✅ Server is running on port ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🤖 Chatbot:       Enabled at /api/chatbot`);
+      console.log(`🎉 Events:        Enabled at /api/events`);
+      console.log(`📋 Registrations: Enabled at /api/registrations`);
+      console.log(`🔔 Notifications: Enabled at /api/notifications`);
+      console.log(`💬 Feedback:      Enabled at /api/feedback`);
+      console.log(`🗨️  Comments:      Enabled at /api/comments`);
+      console.log(`🖼️  Uploads:       Served at /uploads`);
+      
+    });
+
+  } catch (error) {
+    console.error("❌ Failed to connect to MongoDB:", error);
+    process.exit(1); // stop server
+  }
+};
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🤖 Chatbot:       Enabled at /api/chatbot`);
-  console.log(`🎉 Events:        Enabled at /api/events`);
-  console.log(`📋 Registrations: Enabled at /api/registrations`);
-  console.log(`🔔 Notifications: Enabled at /api/notifications`);
-  console.log(`💬 Feedback:      Enabled at /api/feedback`);
-  console.log(`🗨️  Comments:      Enabled at /api/comments`);
-  console.log(`🖼️  Uploads:       Served at /uploads`);
-});
+startServer();
 
 export default app;

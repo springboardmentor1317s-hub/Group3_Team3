@@ -251,7 +251,7 @@ export const getAdminAnalysis = async (req, res) => {
   try {
     let eventFilter = {};
     if (req.user.role === "college_admin") {
-      const evts  = await Event.find({ collegeName: req.user.college }, "_id");
+      const evts  = await Event.find({ college_id: req.user.college_id }, "_id");
       eventFilter = { event: { $in: evts.map((e) => e._id) } };
     }
 
@@ -288,7 +288,7 @@ export const getAllFeedbacksAdmin = async (req, res) => {
   try {
     let query = {};
     if (req.user.role === "college_admin") {
-      const evts  = await Event.find({ collegeName:req.user.college }, "_id");
+      const evts  = await Event.find({ college_id: req.user.college_id }, "_id");
       query.event = { $in: evts.map((e)=>e._id) };
     }
     const feedbacks = await Feedback.find(query)

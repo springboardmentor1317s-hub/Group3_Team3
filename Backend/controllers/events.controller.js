@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Event from '../models/Event.js';
 
 export const createEvent = async (req, res) => {
@@ -59,17 +60,36 @@ export const getEvents = async (req, res) => {
   }
 };
 
+// check path
+
 export const getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
-    console.log(event)
-    if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
-    res.json({ success: true, event });
-  } catch (err) {
-    console.error('Get event error:', err);
-    res.status(500).json({ success: false, message: 'Server Error', error: err.message });
+    const { id } = req.params;
+
+    // ✅ 1. Validate ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Event ID" });
+    }
+
+    // ✅ 2. Fetch event (NO populate first)
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // ✅ 3. Return
+    res.status(200).json({ event });
+
+  } catch (error) {
+    console.error("❌ ERROR in getEventById:", error);
+    res.status(500).json({
+      message: "Server error while fetching event",
+      error: error.message, // 👈 helps debug
+    });
   }
 };
+
 
 export const updateEvent = async (req, res) => {
   try {

@@ -189,7 +189,7 @@ function Events() {
                         {event.organizer}
                       </span>
                       <Link
-                        to={`/events/${event._id}`}
+                        to={`/events/${event._id || event.id}`}
                         className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors flex-shrink-0"
                       >
                         View Details

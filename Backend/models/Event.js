@@ -22,7 +22,7 @@ const eventSchema = new mongoose.Schema(
     },
     college_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'College',
       required: [true, 'College organizer is required']
     },
     organizer: {

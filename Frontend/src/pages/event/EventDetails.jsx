@@ -126,21 +126,27 @@ function EventDetails() {
   const isAdmin   = user?.role === "college_admin" || user?.role === "super_admin";
 
   useEffect(() => {
+      if (!id) {
+      console.error("Invalid event ID");
+      navigate("/events");
+      return;
+    }
     fetchEvent();
-    if (token) checkRegistrationStatus();
-    // Fetch my feedback only for students (for CTA)
-    if (token && isStudent) fetchMyFeedback();
-    // Fetch all feedbacks only for admins
-    if (token && isAdmin) fetchFeedbacks();
+      if (token) checkRegistrationStatus();
+      // Fetch my feedback only for students (for CTA)
+      if (token && isStudent) fetchMyFeedback();
+      // Fetch all feedbacks only for admins
+      if (token && isAdmin) fetchFeedbacks();
   }, [id]);
 
   const fetchEvent = async () => {
     try {
       const res = await api.get(`/events/${id}`);
+      console.log("EVENT:", res.data); // 👈 ADD THIS
       setEvent(res.data.event || res.data);
-    } catch {
+    } catch (err) {
+      console.error("ERROR:", err.response?.data); // 👈 ADD THIS
       toast.error("Failed to load event details");
-      navigate("/events");
     } finally {
       setLoading(false);
     }
@@ -158,15 +164,27 @@ function EventDetails() {
 
   const checkRegistrationStatus = async () => {
     try {
-      const res  = await api.get("/registrations/my");
-      const regs = res.data.registrations || res.data || [];
-      setIsRegistered(regs.some((r) => r.event_id?._id===id || r.event_id===id));
-    } catch { /* silent */ }
+      const token = localStorage.getItem("token");
+
+      if (!token) return; // ✅ முக்கியம்
+
+      const res = await api.get("/registrations/my", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const regs = res.data.registrations || [];
+      setIsRegistered(regs.some((r) => r.event_id?._id === id));
+    } catch (err) {
+      console.log("Registration error:", err.response?.data);
+    }
   };
 
-  const fetchMyFeedback = async () => {
-    try {
-      const res   = await api.get("/feedback/my");
+
+    const fetchMyFeedback = async () => {
+      try {
+        const res   = await api.get("/feedback/my");
       const found = (res.data.feedbacks||[]).find((f) => f.event?._id===id || f.event===id);
       if (found) setMyFeedback(found);
     } catch { /* silent */ }
