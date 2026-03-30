@@ -11,7 +11,9 @@ import {
   FaTicketAlt,
   FaStar,
   FaPlus,
+  FaSpinner
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 function CollegeAdminDashboard() {
   const user = getUser();
@@ -21,6 +23,10 @@ function CollegeAdminDashboard() {
   const [registrations, setRegistrations] = useState([]);
   const [feedbackStats, setFeedbackStats] = useState({});
   const [recentFeedbacks, setRecentFeedbacks] = useState([]);
+
+  const [pendingRegistrations, setPendingRegistrations] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
+
   const [loading, setLoading] = useState(true);
 
   // 🔥 FETCH ALL DATA
@@ -34,18 +40,14 @@ function CollegeAdminDashboard() {
 
       const eventsData = eventRes.data.events || [];
 
-      // SORT latest first
       const sortedEvents = eventsData.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
 
       setEvents(sortedEvents);
-
       setFeedbackStats(feedbackRes.data.globalStats || {});
+      setRecentFeedbacks((feedbackList.data.feedbacks || []).slice(0, 3));
 
-      setRecentFeedbacks(
-        (feedbackList.data.feedbacks || []).slice(0, 3)
-      );
     } catch (err) {
       console.error("Dashboard error:", err);
     } finally {
@@ -53,21 +55,76 @@ function CollegeAdminDashboard() {
     }
   };
 
+  // ✅ FETCH PENDING REGISTRATIONS (IMPORTANT)
+  const fetchPendingRegistrations = async () => {
+    try {
+      setPendingLoading(true);
+
+      const eventRes = await api.get("/events");
+      const events = eventRes.data.events || [];
+
+      let allPending = [];
+
+      await Promise.all(
+        events.map(async (ev) => {
+          try {
+            const regRes = await api.get(`/registrations/event/${ev._id}`);
+            const regs = regRes.data.registrations || [];
+
+            const pending = regs
+              .filter((r) => r.status === "pending")
+              .map((r) => ({
+                _id: r._id,
+                studentName: r.user_id?.name || "—",
+                email: r.user_id?.email || "—",
+                eventTitle: ev.title,
+              }));
+
+            allPending = [...allPending, ...pending];
+          } catch (err) {}
+        })
+      );
+
+      setPendingRegistrations(allPending);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPendingLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchPendingRegistrations();
   }, []);
 
-  // 🔥 REGISTRATION STATS
-  const approved = registrations.filter((r) => r.status === "approved").length;
-  const pending = registrations.filter((r) => r.status === "pending").length;
-  const rejected = registrations.filter((r) => r.status === "rejected").length;
+  // ✅ APPROVE
+  const handleApprove = async (id) => {
+    try {
+      await api.put(`/registrations/${id}/status`, { status: "approved" });
+      toast.success("Approved");
+      fetchPendingRegistrations();
+    } catch {
+      toast.error("Failed");
+    }
+  };
+
+  // ✅ REJECT
+  const handleReject = async (id) => {
+    try {
+      await api.put(`/registrations/${id}/status`, { status: "rejected" });
+      toast.success("Rejected");
+      fetchPendingRegistrations();
+    } catch {
+      toast.error("Failed");
+    }
+  };
 
   return (
     <>
       <Navbar />
 
       <div className="min-h-screen bg-gradient-to-br from-purple-100 via-indigo-100 to-purple-200 p-6">
-
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
           {/* LEFT SIDE */}
@@ -85,123 +142,81 @@ function CollegeAdminDashboard() {
             </div>
 
             {/* STATS */}
+            
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                {
-                  label: "Total Events",
-                  value: events.length,
-                  icon: <FaTicketAlt />,
-                  color: "from-purple-500 to-indigo-600",
-                },
-                {
-                  label: "Feedbacks",
-                  value: feedbackStats.totalFeedbacks || 0,
-                  icon: <FaStar />,
-                  color: "from-pink-500 to-rose-600",
-                },
-                {
-                  label: "Avg Rating",
-                  value: feedbackStats.globalAvg || "0",
-                  icon: <FaCheckCircle />,
-                  color: "from-green-500 to-emerald-600",
-                },
-                {
-                  label: "Participants",
-                  value: events.reduce(
-                    (sum, e) => sum + (e.current_participants || 0),
-                    0
-                  ),
-                  icon: <FaUsers />,
-                  color: "from-orange-400 to-pink-500",
-                },
-              ].map((stat, i) => (
-                <div
-                  key={i}
-                  className="bg-white/80 backdrop-blur-xl p-5 rounded-2xl shadow flex items-center gap-4"
-                >
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} text-white`}>
-                    {stat.icon}
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold text-purple-900">
-                      {stat.value}
-                    </p>
-                    <p className="text-sm text-purple-500">{stat.label}</p>
-                  </div>
-                </div>
-              ))}
+              <div className="bg-white p-5 rounded-2xl shadow">
+                <p className="text-xl font-bold">{events.length}</p>
+                <FaTicketAlt className="text-yellow-500 from-purple-500-to-indigo-600" />
+                <p>Total Events</p>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl shadow">
+                <p className="text-xl font-bold">{feedbackStats.totalFeedbacks || 0}</p>
+                <p>Feedbacks</p>
+                <FaStar className="text-yellow-500" />
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl shadow">
+                <p className="text-xl font-bold">{feedbackStats.globalAvg || 0}</p>
+                <p>Avg Rating</p>
+                <FaCheckCircle className="text-green-500" />
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl shadow">
+                <p className="text-xl font-bold">{pendingRegistrations.length}</p>
+                <p>Pending</p>
+                <FaClock className="text-yellow-500" />
+              </div>
             </div>
 
             {/* QUICK ACTIONS */}
             <div className="grid md:grid-cols-2 gap-4">
-              <Link
-                to="/admin/dashboard/create-event"
-                className="bg-purple-600 text-white p-5 rounded-2xl text-center shadow hover:scale-105 transition"
-              >
+              <Link to="/admin/dashboard/create-event" className="bg-purple-600 text-white p-5 rounded-2xl text-center">
                 <FaPlus className="mx-auto mb-2" />
                 Create Event
               </Link>
 
-              <Link
-                to="/admin/dashboard/events"
-                className="bg-indigo-600 text-white p-5 rounded-2xl text-center shadow hover:scale-105 transition"
-              >
+              <Link to="/admin/dashboard/events" className="bg-indigo-600 text-white p-5 rounded-2xl text-center">
                 Manage Events
               </Link>
-
-              <Link
-                to="/admin/feedback-analytics"
-                className="bg-pink-600 text-white p-5 rounded-2xl text-center shadow hover:scale-105 transition"
-              >
-                <FaStar className="mx-auto mb-2" />
-                Feedback Analytics
-              </Link>
-
-              <Link
-                to="/admin/dashboard/events"
-                className="bg-green-600 text-white p-5 rounded-2xl text-center shadow hover:scale-105 transition"
-              >
-                Registrations
-              </Link>
             </div>
 
-            {/* RECENT EVENTS */}
-            <div>
-              <div className="flex justify-between mb-3">
-                <h2 className="font-bold text-purple-900 text-lg">
-                  Latest Events
-                </h2>
-                <Link to="/admin/dashboard/events" className="text-purple-600">
-                  View All →
-                </Link>
-              </div>
+            {/* 🔥 PENDING APPROVALS */}
+            <div className="bg-white rounded-2xl p-6 shadow">
+              <h2 className="font-bold mb-4 flex items-center gap-2">
+                <FaSpinner className="animate-spin text-yellow-500" />
+                Pending Approvals ({pendingRegistrations.length})
+              </h2>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                {events.slice(0, 2).map((event) => (
-                  <div
-                    key={event._id}
-                    className="bg-white/90 p-5 rounded-2xl shadow hover:shadow-xl transition"
-                  >
-                    <h3 className="font-bold text-purple-900">
-                      {event.title}
-                    </h3>
-                    <p className="text-sm text-purple-500 mt-1">
-                      📍 {event.location}
-                    </p>
+              {pendingLoading ? (
+                <p>Loading...</p>
+              ) : pendingRegistrations.length === 0 ? (
+                <p>No pending approvals</p>
+              ) : (
+                pendingRegistrations.map((reg) => (
+                  <div key={reg._id} className="flex justify-between border p-3 mb-2 rounded">
+                    <div>
+                      <p className="font-bold">{reg.studentName}</p>
+                      <p className="text-sm">{reg.eventTitle}</p>
+                      <p className="text-xs">{reg.email}</p>
+                    </div>
 
-                    <Link
-                      to={`/admin/dashboard/events/${event._id}`}
-                      className="block mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-center py-2 rounded-xl"
-                    >
-                      Manage
-                    </Link>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleApprove(reg._id)} className="bg-green-500 text-white px-3 py-1 rounded">
+                        Approve
+                      </button>
+                      <button onClick={() => handleReject(reg._id)} className="bg-red-500 text-white px-3 py-1 rounded">
+                        Reject
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                ))
+              )}
             </div>
+
           </div>
 
-          {/* RIGHT SIDE */}
+      {/* RIGHT SIDE */}
           <div className="space-y-4">
 
             {/* PROFILE */}
@@ -246,5 +261,6 @@ function CollegeAdminDashboard() {
     </>
   );
 }
+
 
 export default CollegeAdminDashboard;

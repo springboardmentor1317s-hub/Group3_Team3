@@ -28,17 +28,14 @@ function AllColleges() {
       a.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchFilter =
-      filter === "all" ||
-      (filter === "approved" && a.isApproved) ||
-      (filter === "pending"  && !a.isApproved);
+      filter === "all" ;
 
     return matchSearch && matchFilter;
   });
 
   const counts = {
     all:      admins.length,
-    approved: admins.filter((a) => a.isApproved).length,
-    pending:  admins.filter((a) => !a.isApproved).length,
+    
   };
 
   return (
@@ -52,23 +49,14 @@ function AllColleges() {
             <h1 className="text-4xl font-black text-slate-900 mb-1">All Colleges</h1>
             <p className="text-slate-500">Colleges registered on the platform</p>
           </div>
-          <Link to="/super-admin/pending-colleges"
-            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all">
-            Pending Colleges
-            {counts.pending > 0 && (
-              <span className="ml-2 bg-white text-red-500 text-xs font-black px-2 py-0.5 rounded-full">
-                {counts.pending}
-              </span>
-            )}
-          </Link>
+          
         </div>
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
             { label:"Total Colleges",  value:counts.all,      color:"from-indigo-500 to-purple-600" },
-            { label:"Approved",        value:counts.approved, color:"from-emerald-500 to-teal-600"  },
-            { label:"Pending Approval",value:counts.pending,  color:"from-orange-500 to-red-500"    },
+
           ].map((s,i)=>(
             <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
               <div className={`w-12 h-12 bg-gradient-to-br ${s.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
@@ -98,8 +86,7 @@ function AllColleges() {
             <div className="flex gap-2">
               {[
                 { id:"all",      label:`All (${counts.all})`           },
-                { id:"approved", label:`✅ Approved (${counts.approved})` },
-                { id:"pending",  label:`⏳ Pending (${counts.pending})`  },
+            
               ].map((f)=>(
                 <button key={f.id} onClick={()=>setFilter(f.id)}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
@@ -168,7 +155,7 @@ function AllColleges() {
                       </span>
                     ) : (
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 flex items-center gap-1">
-                        <FaClock /> Pending
+                        
                       </span>
                     )}
                     <Link
