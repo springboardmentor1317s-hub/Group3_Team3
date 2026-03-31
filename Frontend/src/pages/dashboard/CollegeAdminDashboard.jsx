@@ -14,6 +14,7 @@ import {
   FaSpinner
 } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { set } from "react-hook-form";
 
 function CollegeAdminDashboard() {
   const user = getUser();
@@ -45,11 +46,21 @@ function CollegeAdminDashboard() {
       );
 
       setEvents(sortedEvents);
-      setFeedbackStats(feedbackRes.data.globalStats || {});
-      setRecentFeedbacks((feedbackList.data.feedbacks || []).slice(0, 3));
+      const allFeedbacks = feedbackList.data.data || [];
+      
+      
+      const collegeFeedbacks = allFeedbacks.filter(
+        (f) => 
+          f.event?.college_id === user?.college_id || 
+          f.student?.college === user?.college
+      );
 
+    
+     
+      setRecentFeedbacks(collegeFeedbacks.slice(0, 3));
+      setFeedbackStats({ totalFeedbacks: collegeFeedbacks.length, globalAvg: collegeFeedbacks.reduce((sum, f) => sum + (f.rating || 0), 0) / (collegeFeedbacks.length || 1) });
     } catch (err) {
-      console.error("Dashboard error:", err);
+      console.error("Feedback API error:", err.response?.data || err.message);
     } finally {
       setLoading(false);
     }

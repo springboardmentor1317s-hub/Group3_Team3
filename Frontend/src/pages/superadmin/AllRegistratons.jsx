@@ -52,16 +52,25 @@ export default function AllRegistrations() {
   };
 
   // Client-side filter
-  const filtered = registrations.filter(r => {
-    const matchStatus = statusFilter === "all" || r.status === statusFilter;
-    const matchEvent  = !eventFilter || r.event?._id === eventFilter;
-    const matchSearch = !search ||
-      r.student?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      r.event?.title?.toLowerCase().includes(search.toLowerCase()) ||
-      r.student?.college?.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchEvent && matchSearch;
-  });
+  const filtered = registrations.filter((r) => {
+  const student = r.student || r.user_id || {};
+  const event = r.event || r.event_id || {};
 
+  const matchStatus =
+    statusFilter === "all" || r.status === statusFilter;
+
+  const matchEvent =
+    !eventFilter || event._id === eventFilter;
+
+  const matchSearch =
+    !search ||
+    student.name?.toLowerCase().includes(search.toLowerCase()) ||
+    student.email?.toLowerCase().includes(search.toLowerCase()) ||
+    student.college?.toLowerCase().includes(search.toLowerCase()) ||
+    event.title?.toLowerCase().includes(search.toLowerCase());
+
+  return matchStatus && matchEvent && matchSearch;
+});
   const counts = {
     all:      registrations.length,
     approved: registrations.filter(r=>r.status==="approved").length,
@@ -154,8 +163,8 @@ export default function AllRegistrations() {
 
               <div className="divide-y divide-slate-100">
                 {filtered.map(reg => {
-                  const ev  = reg.event   || {};
-                  const st  = reg.student || {};
+                  const ev  = reg.event || reg.event_id || {};
+                  const st  = reg.student || reg.user_id || {};
                   const cfg = STATUS_CFG[reg.status] || STATUS_CFG.pending;
                   return (
                     <div key={reg._id}
