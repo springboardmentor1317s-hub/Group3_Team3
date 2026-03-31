@@ -16,7 +16,6 @@ const POPULATE_FEEDBACK = [
   { path: "replies", populate: { path: "student", select: "name college profileImage role" } },
 ];
 
-// ── helper: create notification + real-time push ──────────────────────────────
 const notify = async (io, data) => {
   try {
     const n = await Notification.create(data);
@@ -39,18 +38,11 @@ export const submitFeedback = async (req, res) => {
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ message: "Event not found." });
 
-    // ── PRODUCTION: Uncomment these checks ──────────────────────────────────
-    // if (new Date(event.end_date) > new Date())
-    //   return res.status(400).json({ message: "Feedback can only be submitted after the event has ended." });
-    // const reg = await Registration.findOne({ event: eventId, student: studentId, status: "approved" });
-    // if (!reg) return res.status(403).json({ message: "You can only give feedback for events you have attended." });
-    // ────────────────────────────────────────────────────────────────────────
-
     const existing = await Feedback.findOne({ event: eventId, student: studentId });
     if (existing)
       return res.status(400).json({ message: "You have already submitted feedback for this event." });
 
-    const feedback  = await Feedback.create({
+    const feedback = await Feedback.create({
       event:   eventId,
       student: studentId,
       rating:  rating || null,
@@ -59,15 +51,13 @@ export const submitFeedback = async (req, res) => {
 
     const populated = await Feedback.findById(feedback._id).populate(POPULATE_FEEDBACK);
 
-    // ── Notify college admin + all super admins ───────────────────────────────
     const io      = req.app.get("io");
     const student = await User.findById(studentId).select("name college");
     const stars   = rating ? `${"⭐".repeat(rating)} (${rating}/5)` : "No rating";
 
-    // 1) College admin of this event's college
     const collegeAdmin = await User.findOne({
-      role:     "college_admin",
-      college:  event.collegeName,
+      role:       "college_admin",
+      college:    event.collegeName,
       isApproved: true,
     });
 
@@ -83,7 +73,6 @@ export const submitFeedback = async (req, res) => {
       });
     }
 
-    // 2) All super admins
     const superAdmins = await User.find({ role: "super_admin" }, "_id");
     await Promise.all(
       superAdmins.map((sa) =>
@@ -145,7 +134,7 @@ export const getMyFeedbacks = async (req, res) => {
   }
 };
 
-// ── 4. Get event feedbacks (public — all can view) ────────────────────────────
+// ── 4. Get event feedbacks ────────────────────────────────────────────────────
 export const getEventFeedbacks = async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -251,7 +240,8 @@ export const getAdminAnalysis = async (req, res) => {
   try {
     let eventFilter = {};
     if (req.user.role === "college_admin") {
-      const evts  = await Event.find({ college_id: req.user.college_id }, "_id");
+      // ✅ FIXED: was req.user.college_id → correct field is req.user._id
+      const evts  = await Event.find({ college_id: req.user._id }, "_id");
       eventFilter = { event: { $in: evts.map((e) => e._id) } };
     }
 
@@ -266,21 +256,21 @@ export const getAdminAnalysis = async (req, res) => {
 
     const raw    = await Feedback.aggregate(pipeline);
     const events = raw.map((e) => {
-      const dist = { 1:0,2:0,3:0,4:0,5:0 };
-      (e.ratings||[]).forEach((r) => { if(r>=1&&r<=5) dist[r]++; });
-      return { _id:e._id, title:e.title, category:e.category, collegeName:e.collegeName, start_date:e.start_date, avgRating:e.avgRating, feedbackCount:e.feedbackCount, ratingDistribution:dist };
+      const dist = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+      (e.ratings || []).forEach((r) => { if (r >= 1 && r <= 5) dist[r]++; });
+      return { _id: e._id, title: e.title, category: e.category, collegeName: e.collegeName, start_date: e.start_date, avgRating: e.avgRating, feedbackCount: e.feedbackCount, ratingDistribution: dist };
     });
 
-    const allFbs  = await Feedback.find(eventFilter, "rating");
-    const gDist   = { 1:0,2:0,3:0,4:0,5:0 };
-    allFbs.forEach((f) => { if(f.rating>=1&&f.rating<=5) gDist[f.rating]++; });
-    const rated   = allFbs.filter((f)=>f.rating).length;
-    const gAvg    = rated > 0
-      ? (allFbs.filter((f)=>f.rating).reduce((s,f)=>s+f.rating,0)/rated).toFixed(1)
+    const allFbs = await Feedback.find(eventFilter, "rating");
+    const gDist  = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+    allFbs.forEach((f) => { if (f.rating >= 1 && f.rating <= 5) gDist[f.rating]++; });
+    const rated  = allFbs.filter((f) => f.rating).length;
+    const gAvg   = rated > 0
+      ? (allFbs.filter((f) => f.rating).reduce((s, f) => s + f.rating, 0) / rated).toFixed(1)
       : null;
 
-    res.json({ events, globalStats:{ totalEvents:events.length, totalFeedbacks:allFbs.length, globalAvg:gAvg, globalDistribution:gDist } });
-  } catch (err) { console.error(err); res.status(500).json({ message:"Server error." }); }
+    res.json({ events, globalStats: { totalEvents: events.length, totalFeedbacks: allFbs.length, globalAvg: gAvg, globalDistribution: gDist } });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error." }); }
 };
 
 // ── 10. Admin all feedbacks ───────────────────────────────────────────────────
@@ -288,14 +278,15 @@ export const getAllFeedbacksAdmin = async (req, res) => {
   try {
     let query = {};
     if (req.user.role === "college_admin") {
-      const evts  = await Event.find({ college_id: req.user.college_id }, "_id");
-      query.event = { $in: evts.map((e)=>e._id) };
+      // ✅ FIXED: was req.user.college_id → correct field is req.user._id
+      const evts  = await Event.find({ college_id: req.user._id }, "_id");
+      query.event = { $in: evts.map((e) => e._id) };
     }
     const feedbacks = await Feedback.find(query)
-      .populate("student","name email college profileImage")
-      .populate("event","title category start_date location collegeName")
-      .populate({ path:"replies", populate:{ path:"student", select:"name college" } })
-      .sort({ createdAt:-1 });
-    res.json({ feedbacks, total:feedbacks.length });
-  } catch (err) { console.error(err); res.status(500).json({ message:"Server error." }); }
+      .populate("student", "name email college profileImage")
+      .populate("event", "title category start_date location collegeName")
+      .populate({ path: "replies", populate: { path: "student", select: "name college" } })
+      .sort({ createdAt: -1 });
+    res.json({ feedbacks, total: feedbacks.length });
+  } catch (err) { console.error(err); res.status(500).json({ message: "Server error." }); }
 };
